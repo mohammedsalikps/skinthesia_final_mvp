@@ -13,16 +13,44 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.skinthesia.core.design.SkinthesiaTheme
+import com.skinthesia.feature.analysis.CameraAnalysisScreen
+import com.skinthesia.feature.analysis.CombinedAnalysisScreen
+import com.skinthesia.feature.analysis.PotentialScreen
+import com.skinthesia.feature.analysis.SensorAnalysisScreen
+import com.skinthesia.feature.analysis.SkinPrintScreen
 import com.skinthesia.feature.capture.CameraScreen
+import com.skinthesia.feature.checkin.CheckInIntroScreen
+import com.skinthesia.feature.progress.AdaptivePlanScreen
+import com.skinthesia.feature.progress.ProgressComparisonScreen
 import com.skinthesia.feature.capture.PhotoQualityScreen
 import com.skinthesia.feature.capture.RetakeGuidanceScreen
 import com.skinthesia.feature.capture.SelfieGuideScreen
+import com.skinthesia.feature.community.CommunityPostScreen
+import com.skinthesia.feature.community.CreatePostScreen
+import com.skinthesia.feature.consultation.BookingConfirmationScreen
+import com.skinthesia.feature.consultation.BookingScreen
+import com.skinthesia.feature.consultation.ExpertProfileScreen
+import com.skinthesia.feature.consultation.ExpertsScreen
+import com.skinthesia.feature.consultation.MyBookingsScreen
+import com.skinthesia.feature.learn.ArticleScreen
+import com.skinthesia.feature.marketplace.CartScreen
+import com.skinthesia.feature.marketplace.CheckoutScreen
+import com.skinthesia.feature.marketplace.MarketplaceScreen
+import com.skinthesia.feature.marketplace.OrderConfirmationScreen
+import com.skinthesia.feature.marketplace.OrdersScreen
+import com.skinthesia.feature.marketplace.ProductDetailScreen
 import com.skinthesia.feature.measurement.CalibrationScreen
 import com.skinthesia.feature.measurement.MeasureScreen
 import com.skinthesia.feature.measurement.MeasurementCompleteScreen
 import com.skinthesia.feature.measurement.ProbeConnectScreen
 import com.skinthesia.feature.measurement.ProbePairedScreen
 import com.skinthesia.feature.onboarding.CreateProfileScreen
+import com.skinthesia.feature.plan.PlanScreen
+import com.skinthesia.feature.plan.RecommendationsScreen
+import com.skinthesia.feature.plan.RoutineScreen
+import com.skinthesia.feature.report.AreaDetailScreen
+import com.skinthesia.feature.report.AreasScreen
+import com.skinthesia.feature.report.ReportScreen
 import com.skinthesia.feature.onboarding.GoalStatementScreen
 import com.skinthesia.feature.onboarding.GoalsScreen
 import com.skinthesia.feature.onboarding.LifestyleScreen
@@ -74,6 +102,46 @@ fun SkinthesiaNavHost(
             composable<CalibrationRoute> { CalibrationScreen() }
             composable<MeasureRoute> { MeasureScreen() }
             composable<MeasurementCompleteRoute> { MeasurementCompleteScreen() }
+
+            // Analysis and SkinPrint
+            composable<CameraAnalysisRoute> { CameraAnalysisScreen() }
+            composable<SensorAnalysisRoute> { SensorAnalysisScreen() }
+            composable<CombinedAnalysisRoute> { CombinedAnalysisScreen() }
+            composable<PotentialRoute> { PotentialScreen() }
+            composable<SkinPrintRoute> { SkinPrintScreen() }
+
+            // Report and plan
+            composable<ReportRoute> { ReportScreen() }
+            composable<AreasRoute> { AreasScreen() }
+            composable<AreaDetailRoute> { AreaDetailScreen() }
+            composable<PlanRoute> { PlanScreen() }
+            composable<RoutineRoute> { RoutineScreen() }
+            composable<RecommendationsRoute> { RecommendationsScreen() }
+
+            // Check-in and progress
+            composable<CheckInIntroRoute> { CheckInIntroScreen() }
+            composable<ProgressComparisonRoute> { ProgressComparisonScreen() }
+            composable<AdaptivePlanRoute> { AdaptivePlanScreen() }
+
+            // Marketplace (checkout is simulated)
+            composable<MarketplaceRoute> { MarketplaceScreen() }
+            composable<ProductDetailRoute> { ProductDetailScreen() }
+            composable<CartRoute> { CartScreen() }
+            composable<CheckoutRoute> { CheckoutScreen() }
+            composable<OrderConfirmationRoute> { OrderConfirmationScreen() }
+            composable<OrdersRoute> { OrdersScreen() }
+
+            // Consultation (booking is simulated)
+            composable<ExpertsRoute> { ExpertsScreen() }
+            composable<ExpertProfileRoute> { ExpertProfileScreen() }
+            composable<BookingRoute> { BookingScreen() }
+            composable<BookingConfirmationRoute> { BookingConfirmationScreen() }
+            composable<MyBookingsRoute> { MyBookingsScreen() }
+
+            // Education and community
+            composable<ArticleRoute> { ArticleScreen() }
+            composable<CommunityPostRoute> { CommunityPostScreen() }
+            composable<CreatePostRoute> { CreatePostScreen() }
 
             composable<MainRoute>(
                 enterTransition = { fadeIn(tween(motion.duration(motion.reveal), easing = motion.enterEasing)) },

@@ -149,6 +149,8 @@ fun MiniRing(
     size: Dp = 52.dp,
     color: Color = SkinthesiaTheme.colors.primary,
     delayMillis: Int = 0,
+    /** Replaces the number in the centre, for example "2/4". */
+    label: String? = null,
 ) {
     val colors = SkinthesiaTheme.colors
     val progress = rememberReveal(value / 100f, key = value, durationMillis = 1000, delayMillis = delayMillis).value
@@ -160,7 +162,7 @@ fun MiniRing(
             drawArc(colors.track, 0f, 360f, false, Offset(inset, inset), arcSize, style = Stroke(stroke))
             drawArc(color, -90f, 360f * progress, false, Offset(inset, inset), arcSize, style = Stroke(stroke, cap = StrokeCap.Round))
         }
-        Text(text = (progress * 100).roundToInt().toString(), style = SkinthesiaTheme.typography.numeric, color = colors.textPrimary)
+        Text(text = label ?: (progress * 100).roundToInt().toString(), style = SkinthesiaTheme.typography.numeric, color = colors.textPrimary)
     }
 }
 
@@ -228,7 +230,7 @@ fun PotentialRangeBar(
     Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .height(22.dp)
+            .height(18.dp)
             .clearAndSetSemantics { contentDescription = "Current $current, potential range $low to $high" },
     ) {
         val trackH = 6.dp.toPx()
@@ -236,10 +238,13 @@ fun PotentialRangeBar(
         val w = size.width
         fun x(v: Int) = w * (v / 100f)
         drawRoundRect(colors.track, Offset(0f, y - trackH / 2), Size(w, trackH), CornerRadius(trackH))
-        drawRoundRect(colors.accentBlush, Offset(x(low), y - trackH / 2), Size(x(high) - x(low), trackH), CornerRadius(trackH))
+        // The potential range rests softly on the track; today's value is the solid fill.
+        drawRoundRect(colors.primarySoft.copy(alpha = 0.6f), Offset(x(low), y - trackH / 2), Size((x(high) - x(low)).coerceAtLeast(trackH), trackH), CornerRadius(trackH))
         drawRoundRect(colors.primary, Offset(0f, y - trackH / 2), Size(x(current), trackH), CornerRadius(trackH))
-        drawCircle(colors.surfaceElevated, radius = 8.dp.toPx(), center = Offset(x(projected), y))
-        drawCircle(colors.primary, radius = 8.dp.toPx(), center = Offset(x(projected), y), style = Stroke(2.dp.toPx()))
+        // A slim tick marks the projected position, so the bar never reads as a draggable control.
+        if (projected != current) {
+            drawLine(colors.primary, Offset(x(projected), y - 6.dp.toPx()), Offset(x(projected), y + 6.dp.toPx()), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
+        }
     }
 }
 

@@ -34,7 +34,7 @@ enum class FlowKind { ONBOARDING, CHECK_IN, STANDALONE }
 @Serializable data class CameraAnalysisRoute(val assessmentId: String, val flow: String = FlowKind.ONBOARDING.name)
 @Serializable data class SensorAnalysisRoute(val assessmentId: String? = null, val sessionId: String? = null, val flow: String = FlowKind.ONBOARDING.name)
 @Serializable data class CombinedAnalysisRoute(val assessmentId: String, val flow: String = FlowKind.ONBOARDING.name)
-@Serializable data class PotentialRoute(val assessmentId: String)
+@Serializable data class PotentialRoute(val assessmentId: String, val onboarding: Boolean = false)
 @Serializable data class SkinPrintRoute(val assessmentId: String, val onboarding: Boolean = false)
 @Serializable data class ReportRoute(val assessmentId: String, val onboarding: Boolean = false)
 @Serializable data class AreasRoute(val assessmentId: String)

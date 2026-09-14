@@ -86,7 +86,7 @@ class AppNavigator(private val nav: NavHostController) {
         if (assessmentId != null && flow != FlowKind.STANDALONE) navigate(CombinedAnalysisRoute(assessmentId, flow.name)) else goHome()
 
     fun combinedDone(assessmentId: String, flow: FlowKind) = when (flow) {
-        FlowKind.ONBOARDING -> replace(PotentialRoute(assessmentId))
+        FlowKind.ONBOARDING -> replace(PotentialRoute(assessmentId, onboarding = true))
         FlowKind.CHECK_IN -> replace(ProgressComparisonRoute(assessmentId, flow.name))
         FlowKind.STANDALONE -> replace(SkinPrintRoute(assessmentId))
     }

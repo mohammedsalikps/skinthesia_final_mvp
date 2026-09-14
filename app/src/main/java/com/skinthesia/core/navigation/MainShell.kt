@@ -1,5 +1,9 @@
 package com.skinthesia.core.navigation
 
+import androidx.compose.foundation.layout.statusBarsPadding
+import com.skinthesia.feature.analyze.AnalyzeScreen
+import com.skinthesia.feature.home.HomeScreen
+import com.skinthesia.feature.learn.LearnScreen
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -45,11 +49,19 @@ fun MainShell(modifier: Modifier = Modifier) {
         )
     }
     val selected = TAB_ROUTES.indexOfFirst { route -> entry?.destination?.hasRoute(route::class) == true }.coerceAtLeast(0)
+    val selectTab: (Int) -> Unit = { index ->
+        tabs.navigate(TAB_ROUTES[index]) {
+            popUpTo(tabs.graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(colors.background),
+            .background(colors.background)
+            .statusBarsPadding(),
     ) {
         NavHost(
             navController = tabs,
@@ -62,24 +74,16 @@ fun MainShell(modifier: Modifier = Modifier) {
             popEnterTransition = { fadeIn(tween(motion.duration(motion.base))) },
             popExitTransition = { fadeOut(tween(motion.duration(motion.fast))) },
         ) {
-            composable<HomeTab> { TabPlaceholder("Home") }
+            composable<HomeTab> { HomeScreen(onSelectTab = selectTab) }
             composable<JourneyTab> { TabPlaceholder("Journey") }
-            composable<AnalyzeTab> { TabPlaceholder("Analyze") }
-            composable<LearnTab> { TabPlaceholder("Learn") }
+            composable<AnalyzeTab> { AnalyzeScreen() }
+            composable<LearnTab> { LearnScreen() }
             composable<ProfileTab> { TabPlaceholder("Profile") }
         }
         SkinthesiaBottomBar(
             items = items,
             selectedIndex = selected,
-            onSelect = { index ->
-                if (index != selected) {
-                    tabs.navigate(TAB_ROUTES[index]) {
-                        popUpTo(tabs.graph.findStartDestination().id) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            },
+            onSelect = { index -> if (index != selected) selectTab(index) },
         )
     }
 }

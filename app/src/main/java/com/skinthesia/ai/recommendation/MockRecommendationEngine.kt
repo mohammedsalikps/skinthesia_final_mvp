@@ -127,7 +127,8 @@ class MockRecommendationEngine : RecommendationEngine {
             basedOnAssessmentId = assessment.id,
             focus = focus,
             focusTitle = focusTitle,
-            summary = "Built around ${focusTitle.lowercase(Locale.ROOT)}, using your SkinPrint, " + sources.joinToString(", ") + ".",
+            summary = "Built around ${focusTitle.lowercase(Locale.ROOT)}, using your " +
+                (listOf("SkinPrint") + sources).let { parts -> parts.dropLast(1).joinToString(", ") + " and " + parts.last() } + ".",
             morning = morning,
             evening = evening,
             recommendations = primaries.sortedByDescending { it.matchScore } + alternates,
