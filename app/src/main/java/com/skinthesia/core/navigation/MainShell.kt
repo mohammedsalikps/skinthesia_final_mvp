@@ -9,32 +9,42 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.skinthesia.LocalAppContainer
 import com.skinthesia.core.design.SkinthesiaTheme
+import com.skinthesia.core.ui.components.BottomBarItem
 import com.skinthesia.core.ui.components.SkinthesiaBottomBar
-import com.skinthesia.feature.dashboard.HomeScreen
-import com.skinthesia.feature.dashboard.HomeViewModel
-import com.skinthesia.feature.dashboard.PendingTabScreen
+import com.skinthesia.core.ui.icons.SkinthesiaIcons
+import com.skinthesia.feature.shell.TabPlaceholder
 
-/** Post-onboarding shell: tab content above the persistent bottom navigation. */
+private val TAB_ROUTES: List<Any> = listOf(HomeTab, JourneyTab, AnalyzeTab, LearnTab, ProfileTab)
+
+/**
+ * The daily experience: Home, Journey, Analyze (raised centre), Learn and Profile.
+ * Detail screens are pushed on the root navigator so they cover the bar.
+ */
 @Composable
-fun MainShell(
-    onEditAnswers: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun MainShell(modifier: Modifier = Modifier) {
     val colors = SkinthesiaTheme.colors
     val motion = SkinthesiaTheme.motion
-    val navController = rememberNavController()
-    val backStackEntry by navController.currentBackStackEntryAsState()
-    val currentTab = MainTab.fromRoute(backStackEntry?.destination?.route) ?: MainTab.HOME
+    val tabs = rememberNavController()
+    val entry by tabs.currentBackStackEntryAsState()
+    val items = remember {
+        listOf(
+            BottomBarItem("Home", SkinthesiaIcons.Home),
+            BottomBarItem("Journey", SkinthesiaIcons.Journey),
+            BottomBarItem("Analyze", SkinthesiaIcons.Scan, emphasized = true),
+            BottomBarItem("Learn", SkinthesiaIcons.Learn),
+            BottomBarItem("Profile", SkinthesiaIcons.User),
+        )
+    }
+    val selected = TAB_ROUTES.indexOfFirst { route -> entry?.destination?.hasRoute(route::class) == true }.coerceAtLeast(0)
 
     Column(
         modifier = modifier
@@ -42,8 +52,8 @@ fun MainShell(
             .background(colors.background),
     ) {
         NavHost(
-            navController = navController,
-            startDestination = MainTab.HOME.route,
+            navController = tabs,
+            startDestination = HomeTab,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
@@ -52,21 +62,19 @@ fun MainShell(
             popEnterTransition = { fadeIn(tween(motion.duration(motion.base))) },
             popExitTransition = { fadeOut(tween(motion.duration(motion.fast))) },
         ) {
-            composable(MainTab.HOME.route) {
-                HomeRoute(onEditAnswers = onEditAnswers)
-            }
-            MainTab.entries.filter { it != MainTab.HOME }.forEach { tab ->
-                composable(tab.route) {
-                    PendingTabScreen(tab = tab)
-                }
-            }
+            composable<HomeTab> { TabPlaceholder("Home") }
+            composable<JourneyTab> { TabPlaceholder("Journey") }
+            composable<AnalyzeTab> { TabPlaceholder("Analyze") }
+            composable<LearnTab> { TabPlaceholder("Learn") }
+            composable<ProfileTab> { TabPlaceholder("Profile") }
         }
         SkinthesiaBottomBar(
-            selected = currentTab,
-            onSelect = { tab ->
-                if (tab != currentTab) {
-                    navController.navigate(tab.route) {
-                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+            items = items,
+            selectedIndex = selected,
+            onSelect = { index ->
+                if (index != selected) {
+                    tabs.navigate(TAB_ROUTES[index]) {
+                        popUpTo(tabs.graph.findStartDestination().id) { saveState = true }
                         launchSingleTop = true
                         restoreState = true
                     }
@@ -74,12 +82,4 @@ fun MainShell(
             },
         )
     }
-}
-
-@Composable
-private fun HomeRoute(onEditAnswers: () -> Unit) {
-    val container = LocalAppContainer.current
-    val viewModel: HomeViewModel = viewModel(factory = container.viewModelFactory)
-    val profile by viewModel.profile.collectAsStateWithLifecycle()
-    HomeScreen(profile = profile, onEditAnswers = onEditAnswers)
 }

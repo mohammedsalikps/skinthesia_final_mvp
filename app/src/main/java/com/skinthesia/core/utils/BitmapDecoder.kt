@@ -20,6 +20,18 @@ import kotlin.math.roundToInt
  */
 object BitmapDecoder {
 
+    /** Oriented pixel dimensions (width to height) without decoding the image. */
+    suspend fun dimensions(path: String): Pair<Int, Int>? = withContext(Dispatchers.IO) {
+        val file = File(path)
+        if (!file.exists()) return@withContext null
+        runCatching {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(path, bounds)
+            val rotation = ExifInterface(file).rotationDegrees
+            if (rotation == 90 || rotation == 270) bounds.outHeight to bounds.outWidth else bounds.outWidth to bounds.outHeight
+        }.getOrNull()?.takeIf { it.first > 0 && it.second > 0 }
+    }
+
     suspend fun decode(path: String, maxDimension: Int): Bitmap? = withContext(Dispatchers.IO) {
         val file = File(path)
         if (!file.exists() || maxDimension <= 0) return@withContext null

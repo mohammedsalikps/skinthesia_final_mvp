@@ -6,13 +6,13 @@ import com.skinthesia.domain.model.ImageSource
 enum class ImageKey {
     /** Editorial hero on the Welcome screen. */
     WELCOME_HERO,
-    /** Soft portrait used as a fallback wherever a user photo is missing. */
-    PORTRAIT_SOFT,
+    /** Soft light-and-shadow backdrop for check-ins, journey and editorial cards. */
+    EDITORIAL_LIGHT,
 }
 
 /**
- * Resolves photography for the UI. The Phase 1 implementation serves bundled
- * placeholders; a CDN-backed implementation can replace it without UI changes.
+ * Resolves photography for the UI. The bundled implementation serves generated
+ * editorial imagery; a CDN-backed implementation can replace it without UI changes.
  */
 interface SkinthesiaImageRepository {
     fun image(key: ImageKey): ImageSource

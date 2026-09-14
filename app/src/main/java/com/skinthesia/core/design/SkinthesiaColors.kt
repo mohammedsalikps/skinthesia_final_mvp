@@ -7,10 +7,9 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 /**
- * Raw Skinthesia palette derived from the reference artwork.
- *
- * Feature code should prefer the semantic roles on [SkinthesiaColorScheme]
- * over these raw values so the palette can evolve in one place.
+ * Raw Skinthesia palette derived from the reference artwork: warm ivory grounds,
+ * clay actions, cocoa type and restrained sage, rose, gold and mist accents.
+ * Feature code uses the semantic roles on [SkinthesiaColorScheme], never these directly.
  */
 object SkinthesiaPalette {
     // Warm neutrals
@@ -21,30 +20,33 @@ object SkinthesiaPalette {
     val SandDeep = Color(0xFFD6C6B8)
     val Parchment = Color(0xFFEFE3D8)
 
-    // Blush family (header strips, selected states)
+    // Blush family
     val Blush = Color(0xFFEBD6CC)
     val BlushDeep = Color(0xFFDDBBAD)
     val BlushMist = Color(0xFFF4E8E1)
 
-    // Browns (typography and primary actions)
+    // Browns
     val Cocoa = Color(0xFF3E2A21)
     val Mocha = Color(0xFF6E5648)
-    val Taupe = Color(0xFFA48F80)
-    val TaupeLight = Color(0xFFC4B3A6)
+    val Taupe = Color(0xFF9A8474)
     val Clay = Color(0xFF8A5C48)
     val ClayDeep = Color(0xFF6F493A)
     val ClaySoft = Color(0xFFB98C78)
     val ClayMist = Color(0xFFF1E2DA)
 
-    // Restrained accents
+    // Restrained accents, each with a soft ground and a deep tone for text on it
     val Sage = Color(0xFF7C9782)
-    val SageSoft = Color(0xFFE0E9DF)
+    val SageSoft = Color(0xFFE3EBE2)
+    val SageDeep = Color(0xFF4F6B55)
     val Rose = Color(0xFFC78C85)
-    val RoseSoft = Color(0xFFF3E1DD)
+    val RoseSoft = Color(0xFFF5E3DF)
+    val RoseDeep = Color(0xFF94544D)
     val Gold = Color(0xFFC6A674)
-    val GoldSoft = Color(0xFFF1E7D4)
+    val GoldSoft = Color(0xFFF3EAD8)
+    val GoldDeep = Color(0xFF85663A)
     val Mist = Color(0xFF9AAEB8)
-    val MistSoft = Color(0xFFE2E9EC)
+    val MistSoft = Color(0xFFE4EBEE)
+    val MistDeep = Color(0xFF4E6773)
 
     val White = Color(0xFFFFFFFF)
     val Ink = Color(0xFF1F1512)
@@ -61,6 +63,7 @@ data class SkinthesiaColorScheme(
     val border: Color,
     val borderStrong: Color,
     val divider: Color,
+    val track: Color,
     val textPrimary: Color,
     val textSecondary: Color,
     val textMuted: Color,
@@ -72,14 +75,22 @@ data class SkinthesiaColorScheme(
     val primaryMist: Color,
     val accentBlush: Color,
     val accentBlushDeep: Color,
+    val blushMist: Color,
     val success: Color,
     val successSoft: Color,
+    val successStrong: Color,
     val warning: Color,
     val warningSoft: Color,
+    val warningStrong: Color,
     val info: Color,
     val infoSoft: Color,
+    val infoStrong: Color,
     val gold: Color,
     val goldSoft: Color,
+    val goldStrong: Color,
+    val positive: Color,
+    val negative: Color,
+    val glass: Color,
     val scrim: Color,
     val photoOverlay: Color,
     val disabledContainer: Color,
@@ -95,6 +106,7 @@ val SkinthesiaLightColors = SkinthesiaColorScheme(
     border = SkinthesiaPalette.Sand,
     borderStrong = SkinthesiaPalette.SandDeep,
     divider = SkinthesiaPalette.Parchment,
+    track = SkinthesiaPalette.Parchment,
     textPrimary = SkinthesiaPalette.Cocoa,
     textSecondary = SkinthesiaPalette.Mocha,
     textMuted = SkinthesiaPalette.Taupe,
@@ -106,14 +118,22 @@ val SkinthesiaLightColors = SkinthesiaColorScheme(
     primaryMist = SkinthesiaPalette.ClayMist,
     accentBlush = SkinthesiaPalette.Blush,
     accentBlushDeep = SkinthesiaPalette.BlushDeep,
+    blushMist = SkinthesiaPalette.BlushMist,
     success = SkinthesiaPalette.Sage,
     successSoft = SkinthesiaPalette.SageSoft,
+    successStrong = SkinthesiaPalette.SageDeep,
     warning = SkinthesiaPalette.Rose,
     warningSoft = SkinthesiaPalette.RoseSoft,
+    warningStrong = SkinthesiaPalette.RoseDeep,
     info = SkinthesiaPalette.Mist,
     infoSoft = SkinthesiaPalette.MistSoft,
+    infoStrong = SkinthesiaPalette.MistDeep,
     gold = SkinthesiaPalette.Gold,
     goldSoft = SkinthesiaPalette.GoldSoft,
+    goldStrong = SkinthesiaPalette.GoldDeep,
+    positive = SkinthesiaPalette.SageDeep,
+    negative = SkinthesiaPalette.RoseDeep,
+    glass = SkinthesiaPalette.Cream.copy(alpha = 0.78f),
     scrim = SkinthesiaPalette.Ink.copy(alpha = 0.32f),
     photoOverlay = SkinthesiaPalette.Ink.copy(alpha = 0.18f),
     disabledContainer = SkinthesiaPalette.SandDeep,
@@ -123,8 +143,8 @@ val SkinthesiaLightColors = SkinthesiaColorScheme(
 val LocalSkinthesiaColors = staticCompositionLocalOf { SkinthesiaLightColors }
 
 /**
- * Bridges the Skinthesia roles into a Material 3 [ColorScheme] so that any
- * Material component used inside the app inherits the same warm palette.
+ * Bridges the Skinthesia roles into a Material 3 [ColorScheme] so any Material
+ * component used inside the app inherits the same warm palette.
  */
 fun SkinthesiaColorScheme.toMaterialColorScheme(): ColorScheme = lightColorScheme(
     primary = primary,
@@ -152,7 +172,7 @@ fun SkinthesiaColorScheme.toMaterialColorScheme(): ColorScheme = lightColorSchem
     surfaceContainerLowest = surfaceElevated,
     outline = borderStrong,
     outlineVariant = border,
-    error = warning,
+    error = warningStrong,
     onError = textOnPrimary,
     errorContainer = warningSoft,
     onErrorContainer = textPrimary,

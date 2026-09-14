@@ -11,13 +11,17 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.skinthesia.core.design.SkinthesiaTheme
 import com.skinthesia.core.navigation.SkinthesiaNavHost
 
 class MainActivity : ComponentActivity() {
 
+    private val container: AppContainer by lazy { (application as SkinthesiaApp).container }
+
     private val rootViewModel: RootViewModel by viewModels {
-        (application as SkinthesiaApp).container.viewModelFactory
+        viewModelFactory { initializer { RootViewModel(container.profiles, container.startAssessment) } }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,15 +32,11 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
         )
         splashScreen.setKeepOnScreenCondition { rootViewModel.startDestination.value == null }
-
-        val container = (application as SkinthesiaApp).container
         setContent {
             SkinthesiaTheme {
                 CompositionLocalProvider(LocalAppContainer provides container) {
-                    val startDestination by rootViewModel.startDestination.collectAsStateWithLifecycle()
-                    startDestination?.let { destination ->
-                        SkinthesiaNavHost(startDestination = destination)
-                    }
+                    val start by rootViewModel.startDestination.collectAsStateWithLifecycle()
+                    start?.let { SkinthesiaNavHost(startDestination = it) }
                 }
             }
         }

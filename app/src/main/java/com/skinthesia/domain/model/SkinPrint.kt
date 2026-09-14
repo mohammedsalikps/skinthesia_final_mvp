@@ -1,60 +1,71 @@
 package com.skinthesia.domain.model
 
-/** Overall skin health band shown with the SkinPrint score. */
-enum class SkinHealthStatus {
-    NEEDS_ATTENTION,
-    FAIR,
-    GOOD,
-    EXCELLENT;
+import kotlinx.serialization.Serializable
+
+@Serializable
+enum class SkinPrintDimension(val label: String, val description: String) {
+    CLARITY("Clarity", "How clear skin looks, from blemish and redness estimates."),
+    EVEN_TONE("Even tone", "How even colour looks, from pigmentation and under-eye estimates."),
+    TEXTURE("Texture", "How smooth the surface looks, from texture and fine-line estimates."),
+    HYDRATION("Hydration", "How hydrated skin reads, from probe readings when available."),
+    PORE_APPEARANCE("Pore appearance", "How visible pores look in your photo."),
+}
+
+@Serializable
+data class SkinScore(
+    val dimension: SkinPrintDimension,
+    /** 0..100, higher is better. A tracking indicator, not a medical measurement. */
+    val value: Int,
+    val sources: Set<DataSource>,
+    /** 0..1, how much data supports this score. */
+    val confidence: Float,
+    val explanation: String,
+)
+
+@Serializable
+enum class ScoreBand(val label: String) {
+    BUILDING("Building"),
+    DEVELOPING("Developing"),
+    GOOD("Good"),
+    EXCELLENT("Excellent"),
+    ;
 
     companion object {
-        fun fromScore(score: Int): SkinHealthStatus = when {
-            score >= 85 -> EXCELLENT
+        fun fromScore(score: Int): ScoreBand = when {
+            score >= 80 -> EXCELLENT
             score >= 65 -> GOOD
-            score >= 45 -> FAIR
-            else -> NEEDS_ATTENTION
+            score >= 50 -> DEVELOPING
+            else -> BUILDING
         }
     }
 }
 
-enum class Severity { LOW, MODERATE, HIGH }
-
-/** Facial zones used by the face map and region findings. */
-enum class SkinRegion {
-    FOREHEAD,
-    UNDER_EYES,
-    LEFT_CHEEK,
-    RIGHT_CHEEK,
-    NOSE,
-    AROUND_MOUTH,
-    JAWLINE,
-    CHIN,
-}
-
-/** A concern detected in a specific facial region. */
-data class RegionFinding(
-    val region: SkinRegion,
-    val concern: SkinConcern,
-    val severity: Severity,
-    val note: String,
+/** Which kinds of input went into a SkinPrint, so the UI can explain it truthfully. */
+@Serializable
+data class SkinPrintInputs(
+    val hasCamera: Boolean,
+    val cameraSimulated: Boolean,
+    val hasSensors: Boolean,
+    val sensorsSimulated: Boolean,
+    val hasSelfReport: Boolean,
 )
 
-/** An influence on the user's skin, with how relevant analysis believes it is. */
-data class ContributingFactor(
-    val factor: LifestyleFactor,
-    val relevance: Severity,
-    val description: String,
-)
-
-/** The signature report produced by an analysis run. */
+/**
+ * SKINPRINT™: the composite tracking indicator derived from camera estimates, probe
+ * readings and self-reported context. Calculated by SkinPrintCalculator, never hardcoded.
+ */
+@Serializable
 data class SkinPrint(
     val id: String,
-    /** 0..100 */
-    val score: Int,
-    val status: SkinHealthStatus,
-    val summary: String,
-    val metrics: List<ProgressMetric>,
-    val regionFindings: List<RegionFinding>,
-    val contributingFactors: List<ContributingFactor>,
-    val generatedAt: Long,
-)
+    val assessmentId: String,
+    val overall: Int,
+    val scores: List<SkinScore>,
+    val band: ScoreBand,
+    val week: Int,
+    val createdAt: Long,
+    val inputs: SkinPrintInputs,
+    val algorithmVersion: String,
+) {
+    fun score(dimension: SkinPrintDimension): SkinScore? = scores.firstOrNull { it.dimension == dimension }
+    fun value(dimension: SkinPrintDimension): Int = score(dimension)?.value ?: 0
+}

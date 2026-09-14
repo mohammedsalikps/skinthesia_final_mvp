@@ -6,13 +6,13 @@ import com.skinthesia.domain.repository.ImageKey
 import com.skinthesia.domain.repository.SkinthesiaImageRepository
 
 /**
- * Serves bundled placeholder photography. Swap the drawables under
- * `res/drawable-nodpi` for licensed photography, or replace this class with a
- * remote implementation, without touching any screen.
+ * Serves the bundled editorial imagery (generated light-and-shadow studies, no people
+ * and no third-party rights). Replace the files in `res/drawable-nodpi`, or swap this
+ * class for a CDN-backed one, to use licensed photography without touching any screen.
  */
 class LocalImageRepository : SkinthesiaImageRepository {
     override fun image(key: ImageKey): ImageSource = when (key) {
-        ImageKey.WELCOME_HERO -> ImageSource.Resource(R.drawable.img_hero_placeholder)
-        ImageKey.PORTRAIT_SOFT -> ImageSource.Resource(R.drawable.img_portrait_placeholder)
+        ImageKey.WELCOME_HERO -> ImageSource.Resource(R.drawable.img_hero_botanical)
+        ImageKey.EDITORIAL_LIGHT -> ImageSource.Resource(R.drawable.img_editorial_light)
     }
 }

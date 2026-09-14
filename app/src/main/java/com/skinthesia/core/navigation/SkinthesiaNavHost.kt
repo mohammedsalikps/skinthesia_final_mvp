@@ -6,67 +6,55 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.skinthesia.core.design.SkinthesiaTheme
+import com.skinthesia.feature.onboarding.CreateProfileScreen
+import com.skinthesia.feature.onboarding.GoalStatementScreen
+import com.skinthesia.feature.onboarding.GoalsScreen
+import com.skinthesia.feature.onboarding.LifestyleScreen
+import com.skinthesia.feature.onboarding.QuestionnaireScreen
+import com.skinthesia.feature.onboarding.WelcomeScreen
 
 /**
- * Root navigation: the onboarding graph and the main shell. Transitions are a
- * quiet fade with a short horizontal drift, and collapse to instant cuts when
- * reduced motion is requested.
+ * Root navigation. Transitions are a quiet fade with a short horizontal drift, and
+ * collapse to instant cuts when the system asks for reduced motion.
  */
 @Composable
 fun SkinthesiaNavHost(
-    startDestination: String,
+    startDestination: Any,
     modifier: Modifier = Modifier,
 ) {
-    val navController = rememberNavController()
+    val nav = rememberNavController()
+    val navigator = remember(nav) { AppNavigator(nav) }
     val motion = SkinthesiaTheme.motion
-    val enterDuration = motion.duration(motion.slow)
-    val exitDuration = motion.duration(motion.base)
+    val enter = motion.duration(motion.slow)
+    val exit = motion.duration(motion.base)
 
-    NavHost(
-        navController = navController,
-        startDestination = startDestination,
-        modifier = modifier,
-        enterTransition = {
-            fadeIn(tween(enterDuration, easing = motion.enterEasing)) +
-                slideInHorizontally(tween(enterDuration, easing = motion.enterEasing)) { it / 14 }
-        },
-        exitTransition = {
-            fadeOut(tween(exitDuration, easing = motion.exitEasing)) +
-                slideOutHorizontally(tween(exitDuration, easing = motion.exitEasing)) { -it / 20 }
-        },
-        popEnterTransition = {
-            fadeIn(tween(enterDuration, easing = motion.enterEasing)) +
-                slideInHorizontally(tween(enterDuration, easing = motion.enterEasing)) { -it / 14 }
-        },
-        popExitTransition = {
-            fadeOut(tween(exitDuration, easing = motion.exitEasing)) +
-                slideOutHorizontally(tween(exitDuration, easing = motion.exitEasing)) { it / 20 }
-        },
-    ) {
-        onboardingGraph(
-            navController = navController,
-            onCompleted = {
-                navController.navigate(MainRoutes.ROOT) {
-                    popUpTo(OnboardingRoutes.GRAPH) { inclusive = true }
-                    launchSingleTop = true
-                }
-            },
-        )
-        composable(
-            route = MainRoutes.ROOT,
-            enterTransition = { fadeIn(tween(motion.duration(motion.reveal), easing = motion.enterEasing)) },
-            exitTransition = { fadeOut(tween(exitDuration)) },
-            popEnterTransition = { fadeIn(tween(enterDuration)) },
-            popExitTransition = { fadeOut(tween(exitDuration)) },
+    CompositionLocalProvider(LocalAppNavigator provides navigator) {
+        NavHost(
+            navController = nav,
+            startDestination = startDestination,
+            modifier = modifier,
+            enterTransition = { fadeIn(tween(enter, easing = motion.enterEasing)) + slideInHorizontally(tween(enter, easing = motion.enterEasing)) { it / 16 } },
+            exitTransition = { fadeOut(tween(exit, easing = motion.exitEasing)) + slideOutHorizontally(tween(exit, easing = motion.exitEasing)) { -it / 24 } },
+            popEnterTransition = { fadeIn(tween(enter, easing = motion.enterEasing)) + slideInHorizontally(tween(enter, easing = motion.enterEasing)) { -it / 16 } },
+            popExitTransition = { fadeOut(tween(exit, easing = motion.exitEasing)) + slideOutHorizontally(tween(exit, easing = motion.exitEasing)) { it / 24 } },
         ) {
-            MainShell(
-                onEditAnswers = { navController.navigate(OnboardingRoutes.PHOTO) },
-            )
+            composable<WelcomeRoute> { WelcomeScreen(onStart = { navigator.navigate(CreateProfileRoute) }) }
+            composable<CreateProfileRoute> { CreateProfileScreen() }
+            composable<GoalsRoute> { GoalsScreen() }
+            composable<GoalStatementRoute> { GoalStatementScreen() }
+            composable<QuestionnaireRoute> { QuestionnaireScreen() }
+            composable<LifestyleRoute> { LifestyleScreen() }
+            composable<MainRoute>(
+                enterTransition = { fadeIn(tween(motion.duration(motion.reveal), easing = motion.enterEasing)) },
+                popEnterTransition = { fadeIn(tween(enter)) },
+            ) { MainShell() }
         }
     }
 }

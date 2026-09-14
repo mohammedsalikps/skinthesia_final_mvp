@@ -1,39 +1,38 @@
 package com.skinthesia.domain.model
 
-/** Improvement goals a user can choose during onboarding (screen 03). */
-enum class SkinGoal {
-    CLEARER_SKIN,
-    FEWER_BREAKOUTS,
-    EVEN_SKIN_TONE,
-    SMOOTHER_TEXTURE,
-    REDUCE_DARK_SPOTS,
-    HEALTHY_GLOW,
-    STRONGER_BARRIER,
-    LESS_REDNESS,
-    REDUCE_FINE_LINES;
+import kotlinx.serialization.Serializable
 
-    companion object {
-        /** Maximum number of goals a user may select at once. */
-        const val MAX_SELECTION = 3
-    }
+/** Improvement goals a user can choose (screen 06). */
+@Serializable
+enum class SkinGoal(val label: String) {
+    ACNE("Acne"),
+    DARK_SPOTS("Dark spots"),
+    UNEVEN_TONE("Uneven tone"),
+    TEXTURE("Texture"),
+    PORES("Pores"),
+    HYDRATION("Hydration"),
+    REDNESS("Redness"),
+    DARK_CIRCLES("Dark circles"),
+    FINE_LINES("Fine lines"),
+    OVERALL_HEALTH("Overall skin health"),
 }
 
-/** Measurable 12-week outcomes the user commits to (screen 04). */
-enum class TargetGoal {
-    REDUCE_BREAKOUTS,
-    FADE_DARK_SPOTS,
-    IMPROVE_TEXTURE,
-    BOOST_HYDRATION,
-}
-
-/** The user's stated 12-week target. */
-data class SkinTarget(
-    /** Human phrase such as "Clearer, healthier skin". */
-    val phrase: String,
-    val goals: Set<TargetGoal>,
-    val durationWeeks: Int = DEFAULT_DURATION_WEEKS,
+/** The user's 12-week intention: what they chose, what matters most, and how they put it. */
+@Serializable
+data class GoalPlan(
+    val goals: List<SkinGoal> = emptyList(),
+    /** Up to [MAX_PRIORITIES] goals marked as the main focus, in order. */
+    val priorities: List<SkinGoal> = emptyList(),
+    /** The user's own words, for example "Clearer, healthier-looking skin". */
+    val statement: String = "",
+    val durationWeeks: Int = DEFAULT_WEEKS,
+    val startedAt: Long? = null,
 ) {
+    /** Priorities first, then remaining goals, never empty once goals exist. */
+    val ranked: List<SkinGoal> get() = (priorities + goals).distinct()
+
     companion object {
-        const val DEFAULT_DURATION_WEEKS = 12
+        const val MAX_PRIORITIES = 3
+        const val DEFAULT_WEEKS = 12
     }
 }

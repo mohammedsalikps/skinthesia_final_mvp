@@ -1,9 +1,9 @@
 package com.skinthesia.domain.model
 
 /**
- * Where an image comes from. The UI layer resolves these into painters, so
- * bundled placeholders can be swapped for real photography or remote assets
- * without touching feature code.
+ * Where an image comes from. The UI resolves these into painters, so bundled
+ * placeholders can be swapped for licensed photography or remote assets without
+ * touching feature code.
  */
 sealed interface ImageSource {
     /** A bundled drawable resource id. */

@@ -28,8 +28,8 @@ val PlayfairDisplay = FontFamily(
 )
 
 /**
- * Inter (SIL Open Font License), the neutral sans used for body copy,
- * labels, buttons and navigation. Bundled as a variable font.
+ * Inter (SIL Open Font License), the neutral sans used for body copy, labels,
+ * buttons and navigation. Bundled as a variable font.
  */
 val Inter = FontFamily(
     Font(R.font.inter, weight = FontWeight.Normal),
@@ -59,6 +59,7 @@ private fun serif(
     letterSpacing = letterSpacing.em,
     platformStyle = noPadding,
     lineHeightStyle = editorialLineHeightStyle,
+    lineBreak = LineBreak.Heading,
 )
 
 private fun sans(
@@ -83,23 +84,36 @@ data class SkinthesiaTypography(
     val brand: TextStyle = serif(size = 26f, lineHeight = 30f, weight = FontWeight.Medium, letterSpacing = 0.005f),
     /** "SCIENCE FOR HEALTHY SKIN" tagline under the wordmark. */
     val brandTagline: TextStyle = sans(size = 9.5f, lineHeight = 12f, weight = FontWeight.Medium, letterSpacing = 0.24f),
-    /** Hero statements such as "Healthier skin". */
-    val displayLarge: TextStyle = serif(size = 34f, lineHeight = 40f, weight = FontWeight.Normal, letterSpacing = -0.005f),
-    /** Secondary hero line such as "A more confident you." */
-    val display: TextStyle = serif(size = 26f, lineHeight = 32f, weight = FontWeight.Normal),
-    /** Quote-style statements such as the 12-week target. Lines are balanced so no word is orphaned. */
-    val displayItalic: TextStyle = serif(size = 25f, lineHeight = 34f, weight = FontWeight.Normal, style = FontStyle.Italic)
-        .copy(lineBreak = LineBreak.Heading),
+    /** The largest editorial statement, such as the Welcome headline. */
+    val hero: TextStyle = serif(size = 38f, lineHeight = 44f, letterSpacing = -0.01f),
+    /** Hero statements inside screens. */
+    val displayLarge: TextStyle = serif(size = 34f, lineHeight = 40f, letterSpacing = -0.005f),
+    /** Secondary hero line. */
+    val display: TextStyle = serif(size = 26f, lineHeight = 32f),
+    /** Quote-style statements such as the 12-week goal. Lines are balanced. */
+    val displayItalic: TextStyle = serif(size = 25f, lineHeight = 34f, style = FontStyle.Italic),
+    /** Large section statements. */
+    val headline: TextStyle = serif(size = 28f, lineHeight = 34f),
     /** Screen titles. */
     val title: TextStyle = serif(size = 24f, lineHeight = 31f, weight = FontWeight.Medium),
+    /** Card headlines. */
+    val titleMedium: TextStyle = serif(size = 21f, lineHeight = 27f, weight = FontWeight.Medium),
     /** Card and section titles. */
     val titleSmall: TextStyle = serif(size = 18f, lineHeight = 24f, weight = FontWeight.Medium),
     /** Supporting copy under a title. */
     val subtitle: TextStyle = sans(size = 14f, lineHeight = 21f),
+    /** Comfortable reading text for key sentences. */
+    val bodyLarge: TextStyle = sans(size = 15.5f, lineHeight = 23f),
     /** Default reading text. */
     val body: TextStyle = sans(size = 14f, lineHeight = 21f),
     /** Dense reading text. */
     val bodySmall: TextStyle = sans(size = 12.5f, lineHeight = 18f),
+    /** Long-form article body. */
+    val articleBody: TextStyle = sans(size = 16f, lineHeight = 26f),
+    /** Article standfirst. */
+    val articleLead: TextStyle = serif(size = 19f, lineHeight = 28f, style = FontStyle.Italic),
+    /** List titles and prominent labels. */
+    val labelLarge: TextStyle = sans(size = 15f, lineHeight = 20f, weight = FontWeight.Medium),
     /** Emphasised UI labels (tiles, rows, fields). */
     val label: TextStyle = sans(size = 13f, lineHeight = 18f, weight = FontWeight.Medium),
     /** Small labels (tile captions). */
@@ -114,19 +128,23 @@ data class SkinthesiaTypography(
     val buttonSmall: TextStyle = sans(size = 13f, lineHeight = 18f, weight = FontWeight.Medium),
     /** Bottom navigation labels. */
     val navigation: TextStyle = sans(size = 10f, lineHeight = 12f, weight = FontWeight.Medium, letterSpacing = 0.02f),
-    /** Hero metrics such as the SkinPrint score. */
-    val metricLarge: TextStyle = serif(size = 46f, lineHeight = 50f, weight = FontWeight.Medium),
-    /** Inline metrics such as "72". */
+    /** The SkinPrint score numeral. */
+    val scoreNumeral: TextStyle = serif(size = 64f, lineHeight = 68f, letterSpacing = -0.02f),
+    /** Hero metrics. */
+    val metricLarge: TextStyle = serif(size = 44f, lineHeight = 48f, weight = FontWeight.Medium),
+    /** Inline metrics. */
     val metric: TextStyle = serif(size = 22f, lineHeight = 26f, weight = FontWeight.Medium),
     /** Units and deltas next to a metric. */
     val metricUnit: TextStyle = sans(size = 11f, lineHeight = 14f, weight = FontWeight.Medium, letterSpacing = 0.04f),
+    /** Tabular numbers in tables and rows. */
+    val numeric: TextStyle = sans(size = 13f, lineHeight = 18f, weight = FontWeight.Medium).copy(fontFeatureSettings = "tnum"),
 )
 
 val LocalSkinthesiaTypography = staticCompositionLocalOf { SkinthesiaTypography() }
 
 /** Bridges the Skinthesia scale into Material 3 so Material components stay on-brand. */
 fun SkinthesiaTypography.toMaterialTypography(): Typography = Typography(
-    displayLarge = displayLarge,
+    displayLarge = hero,
     displayMedium = display,
     displaySmall = displayItalic,
     headlineLarge = displayLarge,
@@ -135,7 +153,7 @@ fun SkinthesiaTypography.toMaterialTypography(): Typography = Typography(
     titleLarge = title,
     titleMedium = titleSmall,
     titleSmall = label,
-    bodyLarge = body,
+    bodyLarge = bodyLarge,
     bodyMedium = body,
     bodySmall = bodySmall,
     labelLarge = button,
