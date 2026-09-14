@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!--
+        Adaptive launcher icons stay in mipmap-anydpi-v26. Moving them to the
+        unversioned mipmap-anydpi folder (as ObsoleteSdkInt suggests for
+        minSdk 26) left mipmap/ic_launcher unresolved at resource linking with
+        AGP 8.13, so the versioned folder is kept deliberately.
+    -->
+    <issue id="ObsoleteSdkInt">
+        <ignore regexp="mipmap-anydpi-v26" />
+    </issue>
+</lint>

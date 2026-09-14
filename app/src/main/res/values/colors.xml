@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mirrors SkinthesiaPalette for XML-only surfaces (window, splash, launcher). -->
+    <color name="skinthesia_ivory">#F6F0E9</color>
+    <color name="skinthesia_clay">#8A5C48</color>
+    <color name="skinthesia_cocoa">#3E2A21</color>
+</resources>

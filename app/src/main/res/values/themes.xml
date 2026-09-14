@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base window theme. Compose draws everything; this only paints the window. -->
+    <style name="Theme.Skinthesia" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/skinthesia_ivory</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:colorPrimary">@color/skinthesia_clay</item>
+        <item name="android:colorAccent">@color/skinthesia_clay</item>
+        <item name="android:textColorPrimary">@color/skinthesia_cocoa</item>
+    </style>
+
+    <!-- Launch theme: a calm ivory splash with the monogram, then hands over to Theme.Skinthesia. -->
+    <style name="Theme.Skinthesia.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/skinthesia_ivory</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+        <item name="windowSplashScreenAnimationDuration">400</item>
+        <item name="postSplashScreenTheme">@style/Theme.Skinthesia</item>
+    </style>
+</resources>
