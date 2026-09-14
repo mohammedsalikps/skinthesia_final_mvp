@@ -59,7 +59,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.util.Locale
 
 data class RoutineUiState(
     val loading: Boolean = true,
@@ -114,7 +113,7 @@ fun RoutineScreen() {
         topBar = { SkinthesiaTopBar(title = "${time.label} routine", onBack = navigator::back) },
         bottomBar = {
             SkinthesiaTextButton(
-                text = "Switch to ${other.label.lowercase(Locale.getDefault())} routine",
+                text = "Switch to ${other.label.lowercase()} routine",
                 onClick = { navigator.replace(RoutineRoute(other.name)) },
             )
         },

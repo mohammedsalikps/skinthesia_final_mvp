@@ -1,5 +1,6 @@
 package com.skinthesia.data.local
 
+import androidx.core.net.toUri
 import android.content.Context
 import android.net.Uri
 import android.webkit.MimeTypeMap
@@ -24,7 +25,7 @@ class PhotoStorage(context: Context) : PhotoStore {
     override fun newCaptureFile(): File = newFile(JPEG_EXTENSION)
 
     override suspend fun importFromUri(uri: String): File = withContext(Dispatchers.IO) {
-        val parsed = Uri.parse(uri)
+        val parsed = uri.toUri()
         // Keep the source format's extension (a PNG stays .png); decoding sniffs content either way.
         val extension = appContext.contentResolver.getType(parsed)
             ?.let { MimeTypeMap.getSingleton().getExtensionFromMimeType(it) }

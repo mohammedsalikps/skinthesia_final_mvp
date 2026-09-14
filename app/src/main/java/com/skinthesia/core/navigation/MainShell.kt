@@ -3,6 +3,8 @@ package com.skinthesia.core.navigation
 import androidx.compose.foundation.layout.statusBarsPadding
 import com.skinthesia.feature.analyze.AnalyzeScreen
 import com.skinthesia.feature.home.HomeScreen
+import com.skinthesia.feature.journey.JourneyScreen
+import com.skinthesia.feature.profile.ProfileScreen
 import com.skinthesia.feature.learn.LearnScreen
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -25,7 +27,6 @@ import com.skinthesia.core.design.SkinthesiaTheme
 import com.skinthesia.core.ui.components.BottomBarItem
 import com.skinthesia.core.ui.components.SkinthesiaBottomBar
 import com.skinthesia.core.ui.icons.SkinthesiaIcons
-import com.skinthesia.feature.shell.TabPlaceholder
 
 private val TAB_ROUTES: List<Any> = listOf(HomeTab, JourneyTab, AnalyzeTab, LearnTab, ProfileTab)
 
@@ -75,10 +76,10 @@ fun MainShell(modifier: Modifier = Modifier) {
             popExitTransition = { fadeOut(tween(motion.duration(motion.fast))) },
         ) {
             composable<HomeTab> { HomeScreen(onSelectTab = selectTab) }
-            composable<JourneyTab> { TabPlaceholder("Journey") }
+            composable<JourneyTab> { JourneyScreen(onSelectTab = selectTab) }
             composable<AnalyzeTab> { AnalyzeScreen() }
             composable<LearnTab> { LearnScreen() }
-            composable<ProfileTab> { TabPlaceholder("Profile") }
+            composable<ProfileTab> { ProfileScreen(onSelectTab = selectTab) }
         }
         SkinthesiaBottomBar(
             items = items,

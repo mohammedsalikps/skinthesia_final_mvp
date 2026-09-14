@@ -172,7 +172,7 @@ fun MeasurementCompleteScreen() {
 }
 
 @Composable
-private fun ReadingsTable(session: MeasurementSession) {
+internal fun ReadingsTable(session: MeasurementSession) {
     val colors = SkinthesiaTheme.colors
     val typography = SkinthesiaTheme.typography
     val sensors = SensorType.entries.filter { s -> session.readings.any { it.sensor == s } }

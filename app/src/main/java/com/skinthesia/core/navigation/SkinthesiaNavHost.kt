@@ -46,6 +46,15 @@ import com.skinthesia.feature.measurement.ProbeConnectScreen
 import com.skinthesia.feature.measurement.ProbePairedScreen
 import com.skinthesia.feature.onboarding.CreateProfileScreen
 import com.skinthesia.feature.plan.PlanScreen
+import com.skinthesia.feature.profile.AccountScreen
+import com.skinthesia.feature.profile.ConnectedDeviceScreen
+import com.skinthesia.feature.profile.DataControlsScreen
+import com.skinthesia.feature.profile.EditGoalsScreen
+import com.skinthesia.feature.profile.EditProfileScreen
+import com.skinthesia.feature.profile.MeasurementHistoryScreen
+import com.skinthesia.feature.profile.MyProductsScreen
+import com.skinthesia.feature.profile.PrivacyScreen
+import com.skinthesia.feature.profile.SessionDetailScreen
 import com.skinthesia.feature.plan.RecommendationsScreen
 import com.skinthesia.feature.plan.RoutineScreen
 import com.skinthesia.feature.report.AreaDetailScreen
@@ -142,6 +151,17 @@ fun SkinthesiaNavHost(
             composable<ArticleRoute> { ArticleScreen() }
             composable<CommunityPostRoute> { CommunityPostScreen() }
             composable<CreatePostRoute> { CreatePostScreen() }
+
+            // Profile and settings
+            composable<EditProfileRoute> { EditProfileScreen() }
+            composable<EditGoalsRoute> { EditGoalsScreen() }
+            composable<MyProductsRoute> { MyProductsScreen() }
+            composable<MeasurementHistoryRoute> { MeasurementHistoryScreen() }
+            composable<SessionDetailRoute> { SessionDetailScreen() }
+            composable<ConnectedDeviceRoute> { ConnectedDeviceScreen() }
+            composable<PrivacyRoute> { PrivacyScreen() }
+            composable<DataControlsRoute> { DataControlsScreen() }
+            composable<AccountRoute> { AccountScreen() }
 
             composable<MainRoute>(
                 enterTransition = { fadeIn(tween(motion.duration(motion.reveal), easing = motion.enterEasing)) },

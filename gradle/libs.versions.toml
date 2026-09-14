@@ -1,4 +1,6 @@
 [versions]
+# Espresso 3.7 drops the InputManager.getInstance reflection that crashes Compose UI tests on Android 15+.
+espressoCore = "3.7.0"
 # Pinned deliberately. The newest AndroidX releases (core-ktx 1.19, lifecycle 2.11,
 # navigation 2.10, Compose UI 1.12 via BOM 2026.08+) require compileSdk 37 and AGP 9.1.
 # The project compiles against SDK 36, so these are the latest stable versions that fit.
@@ -23,6 +25,7 @@ androidxTestExt = "1.3.0"
 androidxTestRunner = "1.7.0"
 
 [libraries]
+androidx-test-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }

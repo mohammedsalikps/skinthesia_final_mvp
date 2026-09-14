@@ -33,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -92,7 +93,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.util.Locale
 import java.time.format.TextStyle as DateTextStyle
 
 data class BookingUiState(
@@ -287,7 +287,7 @@ private fun DateChip(date: LocalDate, isSelected: Boolean, isToday: Boolean, onC
     val colors = SkinthesiaTheme.colors
     val typography = SkinthesiaTheme.typography
     val shape = SkinthesiaTheme.shapes.tile
-    val locale = Locale.getDefault()
+    val locale = LocalConfiguration.current.locales[0]
     Column(
         modifier = Modifier
             .width(60.dp)

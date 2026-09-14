@@ -52,6 +52,7 @@ import com.skinthesia.domain.model.ArticleCategory
 import com.skinthesia.domain.model.LearningArticle
 import com.skinthesia.domain.model.SkinGoal
 import com.skinthesia.domain.repository.LearningRepository
+import com.skinthesia.domain.repository.SettingsRepository
 import com.skinthesia.domain.repository.UserProfileRepository
 import com.skinthesia.feature.community.CommunityFeed
 import kotlinx.coroutines.flow.SharingStarted
@@ -67,9 +68,13 @@ data class LearnUiState(
     val goals: Set<SkinGoal> = emptySet(),
 )
 
-class LearnViewModel(private val learning: LearningRepository, profiles: UserProfileRepository) : ViewModel() {
-    val state: StateFlow<LearnUiState> = combine(learning.articles, learning.savedIds, profiles.profile) { articles, saved, profile ->
-        LearnUiState(loading = false, articles = articles, saved = saved, goals = profile.goals.goals.toSet())
+class LearnViewModel(
+    private val learning: LearningRepository,
+    profiles: UserProfileRepository,
+    settings: SettingsRepository,
+) : ViewModel() {
+    val state: StateFlow<LearnUiState> = combine(learning.articles, learning.savedIds, profiles.profile, settings.settings) { articles, saved, profile, s ->
+        LearnUiState(loading = false, articles = articles, saved = saved, goals = if (s.personalizedContent) profile.goals.goals.toSet() else emptySet())
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LearnUiState())
 
     fun toggleSaved(id: String) {
@@ -107,7 +112,7 @@ fun LearnScreen() {
 @Composable
 private fun LibraryContent() {
     val navigator = LocalAppNavigator.current
-    val viewModel = containerViewModel { LearnViewModel(learning, profiles) }
+    val viewModel = containerViewModel { LearnViewModel(learning, profiles, settings) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val spacing = SkinthesiaTheme.spacing
     var query by rememberSaveable { mutableStateOf("") }

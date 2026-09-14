@@ -6,151 +6,18 @@
     <string name="brand_monogram_cd">Skinthesia monogram</string>
 
     <!-- Common -->
-    <string name="action_continue">Continue</string>
-    <string name="action_next">Next</string>
     <string name="action_back">Back</string>
-    <string name="action_set_goal">Set My Goal</string>
     <string name="step_progress">Step %1$d of %2$d</string>
     <string name="state_selected">Selected</string>
     <string name="state_not_selected">Not selected</string>
 
     <!-- 01 Welcome -->
-    <string name="welcome_headline">Healthier skin</string>
-    <string name="welcome_headline_secondary">A more confident you.</string>
-    <string name="welcome_benefit_personalized">Personalized by science</string>
-    <string name="welcome_benefit_progress">Real-time skin progress</string>
-    <string name="welcome_benefit_expert">Expert-backed care</string>
-    <string name="welcome_benefit_community">A supportive community</string>
-    <string name="welcome_cta">Start My Journey</string>
-    <string name="welcome_footnote">Your skin. Our science. A brighter tomorrow.</string>
-    <string name="welcome_hero_cd">Portrait of healthy, natural skin</string>
 
     <!-- 02 Take Your Photo -->
-    <string name="photo_title">Let’s capture\nyour real skin</string>
-    <string name="photo_instruction">Remove makeup, use natural light\nand look straight into the camera.</string>
-    <string name="photo_retake">Retake</string>
-    <string name="photo_flip">Flip</string>
-    <string name="photo_shutter_cd">Take photo</string>
-    <string name="photo_gallery">Choose from gallery</string>
-    <string name="photo_gallery_short">Gallery</string>
-    <string name="photo_hint_align">Align your face inside the guide, then tap the shutter.</string>
-    <string name="photo_hint_captured">Happy with it? Continue, or retake.</string>
-    <string name="photo_hint_required">Take or choose a photo to continue.</string>
-    <string name="photo_permission_title">Camera access needed</string>
-    <string name="photo_permission_body">Skinthesia uses your camera only to capture a baseline photo of your skin. Photos stay on your device.</string>
-    <string name="photo_permission_allow">Allow camera</string>
-    <string name="photo_permission_settings">Open settings</string>
-    <string name="photo_no_camera">No camera was found on this device. You can still choose a photo from your gallery.</string>
-    <string name="photo_error_capture">We couldn’t save that photo. Please try again.</string>
-    <string name="photo_error_import">We couldn’t open that image. Please try another one.</string>
-    <string name="photo_preview_cd">Camera preview</string>
-    <string name="photo_captured_cd">Your captured skin photo</string>
-    <string name="photo_capturing">Capturing…</string>
-    <string name="photo_importing">Preparing your photo…</string>
-    <string name="photo_starting_camera">Starting camera…</string>
 
     <!-- 03 Set Your Goals -->
-    <string name="goals_title">What would you like\nto improve?</string>
-    <string name="goals_instruction">Select up to 3 goals</string>
-    <string name="goals_limit_reached">You can choose up to three goals. Deselect one to change your mix.</string>
-    <string name="goal_clearer_skin">Clearer skin</string>
-    <string name="goal_fewer_breakouts">Fewer breakouts</string>
-    <string name="goal_even_skin_tone">Even skin tone</string>
-    <string name="goal_smoother_texture">Smoother texture</string>
-    <string name="goal_reduce_dark_spots">Reduce dark spots</string>
-    <string name="goal_healthy_glow">Healthy glow</string>
-    <string name="goal_stronger_barrier">Stronger skin barrier</string>
-    <string name="goal_less_redness">Less redness</string>
-    <string name="goal_reduce_fine_lines">Reduce fine lines</string>
 
     <!-- 04 Your Target -->
-    <string name="target_title">Your 12-week goal</string>
-    <string name="target_support">We’ll measure your progress\nagainst these goals.</string>
-    <string name="target_reduce_breakouts">Reduce breakouts</string>
-    <string name="target_fade_dark_spots">Fade dark spots</string>
-    <string name="target_improve_texture">Improve texture</string>
-    <string name="target_boost_hydration">Boost hydration</string>
-    <string name="target_quote_cd">Your 12-week target: %1$s</string>
 
     <!-- 05 Skin Questionnaire -->
-    <string name="questionnaire_title">Tell us about you</string>
-    <string name="questionnaire_subtitle">This helps us create a truly\npersonalized experience.</string>
-    <string name="field_age_range">Age range</string>
-    <string name="field_skin_type">Skin type (self-identified)</string>
-    <string name="field_main_concerns">Main concerns</string>
-    <string name="field_select">Select</string>
-    <string name="age_under_18">Under 18</string>
-    <string name="age_18_24">18–24</string>
-    <string name="age_25_34">25–34</string>
-    <string name="age_35_44">35–44</string>
-    <string name="age_45_54">45–54</string>
-    <string name="age_55_plus">55+</string>
-    <string name="skin_type_normal">Normal</string>
-    <string name="skin_type_dry">Dry</string>
-    <string name="skin_type_oily">Oily</string>
-    <string name="skin_type_combination">Combination</string>
-    <string name="skin_type_sensitive">Sensitive</string>
-    <string name="concern_acne">Acne</string>
-    <string name="concern_pigmentation">Pigmentation</string>
-    <string name="concern_texture">Texture</string>
-    <string name="concern_dryness">Dryness</string>
-    <string name="concern_redness">Redness</string>
-    <string name="concern_fine_lines">Fine lines</string>
-    <string name="concern_dullness">Dullness</string>
-    <string name="concern_pores">Enlarged pores</string>
-
-    <!-- 06 Lifestyle Factors -->
-    <string name="lifestyle_title">What may be\ninfluencing your skin?</string>
-    <string name="lifestyle_instruction">Select all that apply</string>
-    <string name="factor_stress">Stress</string>
-    <string name="factor_sleep">Sleep</string>
-    <string name="factor_diet">Diet</string>
-    <string name="factor_sun">Sun exposure</string>
-    <string name="factor_work">Work environment</string>
-    <string name="factor_hormonal">Hormonal changes</string>
-    <string name="factor_products">Skincare products</string>
-    <string name="factor_climate">Climate</string>
-    <string name="factor_illness">Illness / Medication</string>
-
-    <!-- Main shell -->
-    <string name="nav_home">Home</string>
-    <string name="nav_skinprint">SkinPrint</string>
-    <string name="nav_act">Act</string>
-    <string name="nav_learn">Learn</string>
-    <string name="nav_community">Community</string>
-    <string name="home_greeting_morning">Good morning</string>
-    <string name="home_greeting_afternoon">Good afternoon</string>
-    <string name="home_greeting_evening">Good evening</string>
-    <string name="home_journey_started">Your journey has begun.</string>
-    <string name="home_profile_overline">Your skin profile</string>
-    <string name="home_goals_overline">Your goals</string>
-    <string name="home_target_overline">12-week target</string>
-    <string name="home_factors_overline">Lifestyle factors</string>
-    <string name="home_next_overline">What comes next</string>
-    <string name="home_next_measure_title">Measure</string>
-    <string name="home_next_measure_body">Connect your DermoScan™ to capture hydration, sebum, texture and more.</string>
-    <string name="home_next_skinprint_title">Your SkinPrint™</string>
-    <string name="home_next_skinprint_body">A clear score and face map built from your measurements.</string>
-    <string name="home_next_protocol_title">Personalized protocol</string>
-    <string name="home_next_protocol_body">A 12-week AM and PM routine that adapts to your progress.</string>
-    <string name="home_you_are_here">You are here</string>
-    <string name="home_edit_answers">Update my answers</string>
-    <string name="home_baseline_photo_cd">Your baseline skin photo</string>
-    <string name="home_not_provided">Not provided</string>
-    <string name="home_none_selected">None selected</string>
-    <string name="home_age_label">Age</string>
-    <string name="home_skin_type_label">Skin type</string>
-    <string name="home_concerns_label">Concerns</string>
-    <string name="home_baseline_label">Baseline photo</string>
-    <string name="home_baseline_captured">Captured</string>
-    <string name="tab_skinprint_title">Your SkinPrint™ is waiting</string>
-    <string name="tab_skinprint_body">Once you complete your first DermoScan™ measurement, your score, face map and contributing factors will appear here.</string>
-    <string name="tab_act_title">Your protocol is being prepared</string>
-    <string name="tab_act_body">After your SkinPrint™ we’ll build a 12-week routine around your goals, one that evolves as your skin does.</string>
-    <string name="tab_learn_title">Knowledge. Clarity. Real change.</string>
-    <string name="tab_learn_body">Skinthesia Learn is where skin science becomes clear. Articles unlock with your first SkinPrint™.</string>
-    <string name="tab_community_title">Real people. Real journeys.</string>
-    <string name="tab_community_body">The Skinthesia community opens with your first SkinPrint™. Share progress, ask experts, stay motivated.</string>
-    <string name="tab_next_step_overline">Next step</string>
-    <string name="tab_next_step_measure">Measure your skin with DermoScan™</string>
 </resources>

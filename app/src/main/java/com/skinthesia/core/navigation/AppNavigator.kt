@@ -35,6 +35,14 @@ class AppNavigator(private val nav: NavHostController) {
         }
     }
 
+    /** After erasing all data: back to the very first screen with nothing behind it. */
+    fun restart() {
+        nav.navigate(WelcomeRoute) {
+            popUpTo(nav.graph.id) { inclusive = true }
+            launchSingleTop = true
+        }
+    }
+
     /** Replaces the current destination, so Back skips the step being left. */
     fun replace(route: Any) {
         val current = nav.currentBackStackEntry?.destination?.id

@@ -1,5 +1,6 @@
 package com.skinthesia.ai.quality
 
+import androidx.core.graphics.scale
 import android.graphics.Bitmap
 import android.graphics.PointF
 import android.media.FaceDetector
@@ -76,7 +77,7 @@ class OnDevicePhotoQualityAnalyzer(
     private fun laplacianVariance(source: Bitmap): Float {
         val targetW = SHARPNESS_WIDTH
         val targetH = (source.height * (targetW.toFloat() / source.width)).roundToInt().coerceAtLeast(3)
-        val small = Bitmap.createScaledBitmap(source, targetW, targetH, true)
+        val small = source.scale(targetW, targetH)
         val pixels = IntArray(targetW * targetH)
         small.getPixels(pixels, 0, targetW, 0, 0, targetW, targetH)
         if (small !== source) small.recycle()
@@ -103,7 +104,7 @@ class OnDevicePhotoQualityAnalyzer(
         var w = FACE_WIDTH.coerceAtMost(source.width)
         if (w % 2 != 0) w -= 1
         val h = (source.height * (w.toFloat() / source.width)).roundToInt()
-        val scaled = Bitmap.createScaledBitmap(source, w, h, true)
+        val scaled = source.scale(w, h)
         val rgb565 = scaled.copy(Bitmap.Config.RGB_565, false)
         if (scaled !== source) scaled.recycle()
         val faces = arrayOfNulls<FaceDetector.Face>(1)

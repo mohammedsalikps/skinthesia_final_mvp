@@ -17,3 +17,6 @@
 *.p12
 keystore.properties
 signing.properties
+
+# Local copies of built APKs
+dist/

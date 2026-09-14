@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.skinthesia.core.design.SkinthesiaTheme
 
@@ -66,7 +67,7 @@ fun SegmentedTabs(
         )
         Box(
             modifier = Modifier
-                .offset(x = offset)
+                .offset { IntOffset(offset.roundToPx(), 0) }
                 .width(segment)
                 .fillMaxHeight()
                 .clip(shape)

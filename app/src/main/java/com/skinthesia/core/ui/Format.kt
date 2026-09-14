@@ -1,36 +1,37 @@
 package com.skinthesia.core.ui
 
-import java.text.NumberFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-private val IndianEnglish: Locale = Locale.Builder().setLanguage("en").setRegion("IN").build()
-private val RupeeFormat: NumberFormat = NumberFormat.getIntegerInstance(IndianEnglish)
-private val DayFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())
-private val WeekdayFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE, d MMM", Locale.getDefault())
-private val ShortDayFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMM", Locale.getDefault())
-private val TimeFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
-private val DateTimeFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE, d MMM · h:mm a", Locale.getDefault())
+private fun pattern(pattern: String): DateTimeFormatter = DateTimeFormatter.ofPattern(pattern, Locale.getDefault())
 
-/** Whole rupees with Indian digit grouping, for example ₹1,250. */
-fun formatPrice(rupees: Int): String = "₹" + synchronized(RupeeFormat) { RupeeFormat.format(rupees) }
+/** Whole rupees with Indian digit grouping (₹1,250 and ₹1,25,000), independent of device locale data. */
+fun formatPrice(rupees: Int): String {
+    val digits = kotlin.math.abs(rupees.toLong()).toString()
+    val grouped = if (digits.length <= 3) {
+        digits
+    } else {
+        digits.dropLast(3).reversed().chunked(2).joinToString(",").reversed() + "," + digits.takeLast(3)
+    }
+    return (if (rupees < 0) "-₹" else "₹") + grouped
+}
 
 fun Long.toLocalDate(): LocalDate = Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()
 
-fun LocalDate.formatDay(): String = format(DayFormat)
+fun LocalDate.formatDay(): String = format(pattern("d MMM yyyy"))
 
-fun LocalDate.formatWeekday(): String = format(WeekdayFormat)
+fun LocalDate.formatWeekday(): String = format(pattern("EEEE, d MMM"))
 
-fun LocalDate.formatShort(): String = format(ShortDayFormat)
+fun LocalDate.formatShort(): String = format(pattern("d MMM"))
 
 fun formatDay(epochMillis: Long): String = epochMillis.toLocalDate().formatDay()
 
-fun formatTime(epochMillis: Long): String = Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()).format(TimeFormat)
+fun formatTime(epochMillis: Long): String = Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()).format(pattern("h:mm a"))
 
-fun formatDateTime(epochMillis: Long): String = Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()).format(DateTimeFormat)
+fun formatDateTime(epochMillis: Long): String = Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()).format(pattern("EEE, d MMM · h:mm a"))
 
 /** "Just now", "5 min ago", "3 h ago", "2 d ago", then a date. */
 fun relativeTime(epochMillis: Long, now: Long = System.currentTimeMillis()): String {

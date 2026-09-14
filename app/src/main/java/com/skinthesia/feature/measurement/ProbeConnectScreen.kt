@@ -150,11 +150,12 @@ fun ProbeConnectScreen() {
         }
         Spacer(Modifier.height(spacing.md))
         AnimatedContent(
-            targetState = state::class,
+            targetState = state,
             transitionSpec = { fadeIn(tween(250)) togetherWith fadeOut(tween(200)) },
+            contentKey = { it::class },
             label = "probeState",
-        ) { _ ->
-            when (val s = state) {
+        ) { target ->
+            when (val s = target) {
                 is ProbeState.Idle -> IdleContent()
                 is ProbeState.Scanning -> ScanningContent(found = s.found, connecting = null, onConnect = { viewModel.connect(it, onConnected) })
                 is ProbeState.Connecting -> ScanningContent(found = listOf(s.device), connecting = s.device, onConnect = {})

@@ -47,6 +47,7 @@ import com.skinthesia.domain.model.CommunityAuthor
 import com.skinthesia.domain.model.CommunityPost
 import com.skinthesia.domain.model.CommunitySection
 import com.skinthesia.domain.repository.CommunityRepository
+import com.skinthesia.domain.repository.SettingsRepository
 import com.skinthesia.domain.repository.UserProfileRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,6 +64,7 @@ import kotlinx.coroutines.launch
 class CommunityFeedViewModel(
     private val community: CommunityRepository,
     profiles: UserProfileRepository,
+    settings: SettingsRepository,
 ) : ViewModel() {
 
     private val _section = MutableStateFlow(CommunitySection.FOR_YOU)
@@ -72,7 +74,8 @@ class CommunityFeedViewModel(
     val posts: StateFlow<List<CommunityPost>?> = combine(
         _section,
         profiles.profile.map { it.goals.goals.toSet() }.distinctUntilChanged(),
-    ) { section, goals -> section to goals }
+        settings.settings.map { it.personalizedContent }.distinctUntilChanged(),
+    ) { section, goals, personal -> section to (if (personal) goals else emptySet()) }
         .flatMapLatest { (section, goals) -> community.feed(section, goals) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
@@ -89,7 +92,7 @@ class CommunityFeedViewModel(
 @Composable
 fun CommunityFeed() {
     val navigator = LocalAppNavigator.current
-    val viewModel = containerViewModel { CommunityFeedViewModel(community, profiles) }
+    val viewModel = containerViewModel { CommunityFeedViewModel(community, profiles, settings) }
     val section by viewModel.section.collectAsStateWithLifecycle()
     val posts by viewModel.posts.collectAsStateWithLifecycle()
     val colors = SkinthesiaTheme.colors
