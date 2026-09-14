@@ -1,6 +1,7 @@
 package com.skinthesia.core.navigation
 
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavHostController
 import com.skinthesia.domain.model.MeasurementRegion
 
@@ -12,6 +13,15 @@ import com.skinthesia.domain.model.MeasurementRegion
 class AppNavigator(private val nav: NavHostController) {
 
     fun navigate(route: Any) = nav.navigate(route) { launchSingleTop = true }
+
+    /**
+     * Pushes a destination even when the same screen is already on top, such as the next
+     * measurement region or a related article. Ignored mid-transition to avoid double pushes.
+     */
+    fun push(route: Any) {
+        val resumed = nav.currentBackStackEntry?.lifecycle?.currentState?.isAtLeast(Lifecycle.State.RESUMED) ?: true
+        if (resumed) nav.navigate(route)
+    }
 
     fun back() {
         if (!nav.navigateUp()) nav.popBackStack()
@@ -56,7 +66,7 @@ class AppNavigator(private val nav: NavHostController) {
     fun calibrate(assessmentId: String?, flow: FlowKind) = navigate(CalibrationRoute(assessmentId, flow.name))
 
     fun measureRegion(sessionId: String, region: MeasurementRegion, assessmentId: String?, flow: FlowKind) =
-        navigate(MeasureRoute(sessionId, region.name, assessmentId, flow.name))
+        push(MeasureRoute(sessionId, region.name, assessmentId, flow.name))
 
     fun measurementComplete(sessionId: String, assessmentId: String?, flow: FlowKind) =
         navigate(MeasurementCompleteRoute(sessionId, assessmentId, flow.name))

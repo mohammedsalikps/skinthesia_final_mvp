@@ -13,6 +13,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.skinthesia.core.design.SkinthesiaTheme
+import com.skinthesia.feature.capture.CameraScreen
+import com.skinthesia.feature.capture.PhotoQualityScreen
+import com.skinthesia.feature.capture.RetakeGuidanceScreen
+import com.skinthesia.feature.capture.SelfieGuideScreen
+import com.skinthesia.feature.measurement.CalibrationScreen
+import com.skinthesia.feature.measurement.MeasureScreen
+import com.skinthesia.feature.measurement.MeasurementCompleteScreen
+import com.skinthesia.feature.measurement.ProbeConnectScreen
+import com.skinthesia.feature.measurement.ProbePairedScreen
 import com.skinthesia.feature.onboarding.CreateProfileScreen
 import com.skinthesia.feature.onboarding.GoalStatementScreen
 import com.skinthesia.feature.onboarding.GoalsScreen
@@ -47,10 +56,25 @@ fun SkinthesiaNavHost(
         ) {
             composable<WelcomeRoute> { WelcomeScreen(onStart = { navigator.navigate(CreateProfileRoute) }) }
             composable<CreateProfileRoute> { CreateProfileScreen() }
+            composable<SelfieGuideRoute> { SelfieGuideScreen() }
+            composable<CameraRoute>(
+                enterTransition = { fadeIn(tween(enter)) },
+                exitTransition = { fadeOut(tween(exit)) },
+            ) { CameraScreen() }
+            composable<PhotoQualityRoute> { PhotoQualityScreen() }
+            composable<RetakeGuidanceRoute> { RetakeGuidanceScreen() }
             composable<GoalsRoute> { GoalsScreen() }
             composable<GoalStatementRoute> { GoalStatementScreen() }
             composable<QuestionnaireRoute> { QuestionnaireScreen() }
             composable<LifestyleRoute> { LifestyleScreen() }
+
+            // Probe and measurement
+            composable<ProbeConnectRoute> { ProbeConnectScreen() }
+            composable<ProbePairedRoute> { ProbePairedScreen() }
+            composable<CalibrationRoute> { CalibrationScreen() }
+            composable<MeasureRoute> { MeasureScreen() }
+            composable<MeasurementCompleteRoute> { MeasurementCompleteScreen() }
+
             composable<MainRoute>(
                 enterTransition = { fadeIn(tween(motion.duration(motion.reveal), easing = motion.enterEasing)) },
                 popEnterTransition = { fadeIn(tween(enter)) },

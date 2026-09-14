@@ -10,7 +10,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.skinthesia.core.design.SkinthesiaTheme
 import com.skinthesia.core.navigation.LocalAppNavigator
-import com.skinthesia.core.navigation.MainRoute
+import com.skinthesia.core.navigation.FlowKind
+import com.skinthesia.core.navigation.ProbeConnectRoute
 import com.skinthesia.core.navigation.containerViewModel
 import com.skinthesia.core.ui.components.ChoiceChips
 import com.skinthesia.core.ui.components.FadeInUp
@@ -20,6 +21,7 @@ import com.skinthesia.core.ui.components.OnboardingScaffold
 import com.skinthesia.core.ui.components.QuestionBlock
 import com.skinthesia.core.ui.components.SkinthesiaPrimaryButton
 import com.skinthesia.core.ui.icons.SkinthesiaIcons
+import com.skinthesia.domain.model.AssessmentKind
 import com.skinthesia.domain.model.Climate
 import com.skinthesia.domain.model.DietPattern
 import com.skinthesia.domain.model.Environment
@@ -30,13 +32,17 @@ import com.skinthesia.domain.model.LifestyleProfile
 import com.skinthesia.domain.model.OnboardingStage
 import com.skinthesia.domain.model.SleepPattern
 import com.skinthesia.domain.repository.UserProfileRepository
+import com.skinthesia.domain.usecase.StartAssessmentUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class LifestyleViewModel(private val profiles: UserProfileRepository) : ViewModel() {
+class LifestyleViewModel(
+    private val profiles: UserProfileRepository,
+    private val startAssessment: StartAssessmentUseCase,
+) : ViewModel() {
 
     private val _state = MutableStateFlow(LifestyleProfile())
     val state: StateFlow<LifestyleProfile> = _state.asStateFlow()
@@ -47,11 +53,12 @@ class LifestyleViewModel(private val profiles: UserProfileRepository) : ViewMode
 
     fun update(transform: (LifestyleProfile) -> LifestyleProfile) = _state.update(transform)
 
-    fun submit(onDone: () -> Unit) {
+    /** Saves the answers and hands the baseline assessment on to the probe step. */
+    fun submit(onDone: (assessmentId: String) -> Unit) {
         val lifestyle = _state.value
         viewModelScope.launch {
             profiles.update { it.copy(lifestyle = lifestyle, onboardingStage = it.onboardingStage.atLeast(OnboardingStage.PROBE)) }
-            onDone()
+            onDone(startAssessment(AssessmentKind.BASELINE).id)
         }
     }
 }
@@ -62,7 +69,7 @@ private fun <T> T?.pick(value: T): T? = if (this == value) null else value
 @Composable
 fun LifestyleScreen() {
     val navigator = LocalAppNavigator.current
-    val viewModel = containerViewModel { LifestyleViewModel(profiles) }
+    val viewModel = containerViewModel { LifestyleViewModel(profiles, startAssessment) }
     val life by viewModel.state.collectAsStateWithLifecycle()
     val spacing = SkinthesiaTheme.spacing
     val motion = SkinthesiaTheme.motion
@@ -72,7 +79,7 @@ fun LifestyleScreen() {
         totalSteps = OnboardingSteps.TOTAL,
         onBack = navigator::back,
         bottomBar = {
-            SkinthesiaPrimaryButton(text = "Next", onClick = { viewModel.submit { navigator.navigate(MainRoute) } })
+            SkinthesiaPrimaryButton(text = "Next", onClick = { viewModel.submit { id -> navigator.navigate(ProbeConnectRoute(id, FlowKind.ONBOARDING.name)) } })
         },
     ) {
         OnboardingHeader(title = "Your daily context", subtitle = "All optional. These shape suggestions in your plan.")
