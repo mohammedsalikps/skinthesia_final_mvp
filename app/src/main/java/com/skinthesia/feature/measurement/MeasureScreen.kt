@@ -39,6 +39,8 @@ import com.skinthesia.core.navigation.MeasureRoute
 import com.skinthesia.core.navigation.containerViewModel
 import com.skinthesia.core.navigation.toFlowKind
 import com.skinthesia.core.ui.art.FaceDiagram
+import com.skinthesia.core.ui.art.ProbeIllustration
+import com.skinthesia.core.ui.art.ProbeVisualState
 import com.skinthesia.core.ui.art.zone
 import com.skinthesia.core.ui.components.FadeInUp
 import com.skinthesia.core.ui.components.SectionOverline
@@ -209,9 +211,20 @@ fun MeasureScreen() {
             }
         }
         Spacer(Modifier.height(spacing.md))
+        ProbeIllustration(
+            state = when (state.phase) {
+                MeasurePhase.READY -> ProbeVisualState.CONNECTED
+                MeasurePhase.MEASURING -> ProbeVisualState.MEASURING
+                MeasurePhase.DONE -> ProbeVisualState.CONNECTED
+                MeasurePhase.FAILED -> ProbeVisualState.IDLE
+            },
+            contentDescription = "Skinthesia Probe, " + region.label.lowercase(),
+            modifier = Modifier.fillMaxWidth().height(148.dp),
+        )
+        Spacer(Modifier.height(spacing.sm))
         FaceDiagram(
             contentDescription = "Face map. " + region.label + " is highlighted.",
-            modifier = Modifier.fillMaxWidth().height(250.dp),
+            modifier = Modifier.fillMaxWidth().height(200.dp),
             activeZone = region.zone().takeIf { state.phase != MeasurePhase.DONE },
             completedZones = state.completed.map { it.zone() }.toSet(),
             measurementPoints = MeasurementRegion.entries.map { it.zone() }.toSet(),

@@ -7,27 +7,44 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
+import com.skinthesia.R
 import com.skinthesia.core.design.SkinthesiaPalette
 import com.skinthesia.core.design.SkinthesiaTheme
-import kotlin.math.min
+import kotlin.math.sin
 
 enum class ProbeVisualState { IDLE, SEARCHING, CONNECTED, MEASURING }
 
+/** Cropped product photo is 441x1100px. */
+private const val PROBE_ASPECT = 441f / 1100f
+
 /**
- * Illustration of the Skinthesia Probe: a porcelain handheld wand with a clay
- * accent band and a sensor head. Searching and measuring states radiate calm rings.
+ * The official Skinthesia Probe product photo. The artwork itself is never
+ * redrawn or recolored - device state is communicated entirely by the UI around
+ * it: a soft ground shadow always; expanding rings while [ProbeVisualState.SEARCHING];
+ * a gentle steady glow near the sensor heads once [ProbeVisualState.CONNECTED]; a
+ * pulsing glow in the same spot while [ProbeVisualState.MEASURING] (that's where
+ * the sensors meet the skin); and a dimmed, still photo when [ProbeVisualState.IDLE].
  */
 @Composable
 fun ProbeIllustration(
@@ -39,74 +56,79 @@ fun ProbeIllustration(
     val motion = SkinthesiaTheme.motion
     val transition = rememberInfiniteTransition(label = "probe")
     val wave by transition.animateFloat(0f, 1f, infiniteRepeatable(tween(2200, easing = LinearEasing), RepeatMode.Restart), label = "wave")
-    val blink by transition.animateFloat(0.35f, 1f, infiniteRepeatable(tween(900), RepeatMode.Reverse), label = "blink")
+    val breath by transition.animateFloat(0f, 1f, infiniteRepeatable(tween(1800, easing = LinearEasing), RepeatMode.Restart), label = "breath")
+    val float by transition.animateFloat(0f, 1f, infiniteRepeatable(tween(3000, easing = LinearEasing), RepeatMode.Reverse), label = "float")
     val animate = !motion.reducedMotion
-    val led = when (state) {
+
+    val glowColor = when (state) {
         ProbeVisualState.IDLE -> colors.textMuted
         ProbeVisualState.SEARCHING -> colors.gold
         ProbeVisualState.CONNECTED -> colors.success
         ProbeVisualState.MEASURING -> colors.primary
     }
-    val ledAlpha = if (animate && (state == ProbeVisualState.SEARCHING || state == ProbeVisualState.MEASURING)) blink else 1f
+    val imageAlpha = if (state == ProbeVisualState.IDLE) 0.6f else 1f
+    val floatOffset = if (animate && state != ProbeVisualState.IDLE) (float - 0.5f) * 5f else 0f
 
-    Canvas(modifier = modifier.semantics { this.contentDescription = contentDescription }) {
-        val vw = 200f
-        val vh = 260f
-        val scale = min(size.width / vw, size.height / vh)
-        withTransform({
-            translate((size.width - vw * scale) / 2, (size.height - vh * scale) / 2)
-            scale(scale, scale, pivot = Offset.Zero)
-        }) {
-            drawOval(
-                brush = Brush.radialGradient(listOf(SkinthesiaPalette.Cocoa.copy(alpha = 0.16f), Color.Transparent), center = Offset(104f, 244f), radius = 60f),
-                topLeft = Offset(44f, 236f),
-                size = Size(120f, 16f),
-            )
-            withTransform({ rotate(-14f, pivot = Offset(100f, 140f)) }) {
-                val head = Offset(100f, 70f)
-                if (state == ProbeVisualState.SEARCHING || state == ProbeVisualState.MEASURING) {
+    Box(modifier = modifier.semantics { this.contentDescription = contentDescription }, contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .aspectRatio(PROBE_ASPECT, matchHeightConstraintsFirst = true)
+                .offset(y = floatOffset.dp),
+            contentAlignment = Alignment.TopCenter,
+        ) {
+            Canvas(Modifier.fillMaxSize()) {
+                // Ground shadow: always present, grounds the device on any surface.
+                drawOval(
+                    brush = Brush.radialGradient(
+                        listOf(SkinthesiaPalette.Cocoa.copy(alpha = 0.16f), Color.Transparent),
+                        center = Offset(size.width * 0.5f, size.height * 0.99f),
+                        radius = size.width * 0.62f,
+                    ),
+                    topLeft = Offset(size.width * 0.1f, size.height * 0.955f),
+                    size = Size(size.width * 0.8f, size.height * 0.05f),
+                )
+
+                // The two sensor heads sit at the very top of the device: every glow
+                // and ring effect is centered there, never over the body or logo.
+                val headCenter = Offset(size.width * 0.5f, size.height * 0.09f)
+
+                if (state == ProbeVisualState.SEARCHING) {
                     val phases = if (animate) listOf(wave, (wave + 0.33f) % 1f, (wave + 0.66f) % 1f) else listOf(0.2f, 0.55f, 0.9f)
                     phases.forEach { p ->
                         drawCircle(
-                            color = (if (state == ProbeVisualState.MEASURING) colors.primary else colors.gold).copy(alpha = (1f - p) * 0.35f),
-                            radius = 38f + 70f * p,
-                            center = head,
-                            style = Stroke(1.2f),
+                            color = glowColor.copy(alpha = (1f - p) * 0.4f),
+                            radius = size.width * (0.32f + 0.5f * p),
+                            center = headCenter,
+                            style = Stroke(size.width * 0.012f),
                         )
                     }
                 }
-                drawRoundRect(
-                    brush = Brush.horizontalGradient(
-                        listOf(SkinthesiaPalette.SandDeep, SkinthesiaPalette.Cream, SkinthesiaPalette.White, SkinthesiaPalette.Linen, SkinthesiaPalette.SandDeep),
-                        startX = 76f,
-                        endX = 124f,
-                    ),
-                    topLeft = Offset(77f, 92f),
-                    size = Size(46f, 146f),
-                    cornerRadius = CornerRadius(23f),
-                )
-                drawRect(
-                    brush = Brush.horizontalGradient(listOf(SkinthesiaPalette.ClayDeep, SkinthesiaPalette.Clay, SkinthesiaPalette.ClaySoft, SkinthesiaPalette.ClayDeep), startX = 77f, endX = 123f),
-                    topLeft = Offset(77f, 118f),
-                    size = Size(46f, 7f),
-                )
-                drawCircle(
-                    brush = Brush.radialGradient(listOf(SkinthesiaPalette.White, SkinthesiaPalette.Cream, SkinthesiaPalette.SandDeep), center = Offset(90f, 58f), radius = 44f),
-                    radius = 34f,
-                    center = head,
-                )
-                drawCircle(SkinthesiaPalette.SandDeep.copy(alpha = 0.8f), radius = 34f, center = head, style = Stroke(1f))
-                drawCircle(
-                    brush = Brush.radialGradient(listOf(SkinthesiaPalette.ClaySoft, SkinthesiaPalette.ClayDeep), center = Offset(95f, 66f), radius = 20f),
-                    radius = 17f,
-                    center = head,
-                )
-                drawCircle(SkinthesiaPalette.Gold.copy(alpha = 0.7f), radius = 17f, center = head, style = Stroke(1.4f))
-                drawCircle(SkinthesiaPalette.White.copy(alpha = 0.35f), radius = 5f, center = Offset(94f, 64f))
-                drawCircle(led.copy(alpha = 0.25f * ledAlpha), radius = 7f, center = Offset(100f, 152f))
-                drawCircle(led.copy(alpha = ledAlpha), radius = 3.2f, center = Offset(100f, 152f))
-                drawLine(SkinthesiaPalette.White.copy(alpha = 0.7f), Offset(86f, 132f), Offset(86f, 222f), strokeWidth = 2f)
+
+                if (state == ProbeVisualState.CONNECTED) {
+                    val steady = if (animate) 0.14f + 0.08f * breath else 0.18f
+                    drawCircle(
+                        brush = Brush.radialGradient(listOf(glowColor.copy(alpha = steady), Color.Transparent), center = headCenter, radius = size.width * 0.55f),
+                        radius = size.width * 0.55f,
+                        center = headCenter,
+                    )
+                }
+
+                if (state == ProbeVisualState.MEASURING) {
+                    val pulse = if (animate) 0.55f + 0.45f * ((sin(breath * 2 * Math.PI.toFloat()) + 1f) / 2f) else 0.85f
+                    drawCircle(
+                        brush = Brush.radialGradient(listOf(glowColor.copy(alpha = 0.34f * pulse), Color.Transparent), center = headCenter, radius = size.width * 0.64f),
+                        radius = size.width * 0.64f,
+                        center = headCenter,
+                    )
+                }
             }
+            Image(
+                painter = painterResource(R.drawable.probe_device),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize().alpha(imageAlpha),
+            )
         }
     }
 }
