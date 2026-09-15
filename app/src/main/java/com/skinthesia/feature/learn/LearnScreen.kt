@@ -100,6 +100,7 @@ fun LearnScreen() {
             } else {
                 "Questions, routines and stories, shared with care."
             },
+            showMark = true,
         )
         Spacer(Modifier.height(spacing.md))
         SegmentedTabs(options = LEARN_SEGMENTS, selectedIndex = segment, onSelect = { segment = it })

@@ -126,6 +126,7 @@ fun ProductThumb(product: Product, modifier: Modifier = Modifier, size: Dp = 64.
         form = product.form,
         tone = product.tone,
         modifier = modifier.size(size).clip(SkinthesiaTheme.shapes.tile),
+        mark = product.brand.take(1).uppercase(),
         contentDescription = null,
     )
 }

@@ -136,6 +136,7 @@ fun AnalyzeScreen() {
             overline = "Analyze",
             title = "Measure what's changing",
             subtitle = "Weekly check-ins pair a selfie with your probe. Take a probe reading any time.",
+            showMark = true,
         )
         Spacer(Modifier.height(spacing.lg))
         FadeInUp {

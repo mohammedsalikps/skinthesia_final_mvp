@@ -7,6 +7,8 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -15,6 +17,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.skinthesia.core.design.SkinthesiaTheme
 import com.skinthesia.core.navigation.SkinthesiaNavHost
+import com.skinthesia.core.ui.launch.LaunchIntro
 
 class MainActivity : ComponentActivity() {
 
@@ -36,7 +39,20 @@ class MainActivity : ComponentActivity() {
             SkinthesiaTheme {
                 CompositionLocalProvider(LocalAppContainer provides container) {
                     val start by rootViewModel.startDestination.collectAsStateWithLifecycle()
-                    start?.let { SkinthesiaNavHost(startDestination = it) }
+                    val introShown by rootViewModel.introShown.collectAsStateWithLifecycle()
+                    start?.let { destination ->
+                        Crossfade(
+                            targetState = introShown,
+                            animationSpec = tween(durationMillis = 420),
+                            label = "launchIntro",
+                        ) { shown ->
+                            if (shown) {
+                                SkinthesiaNavHost(startDestination = destination)
+                            } else {
+                                LaunchIntro(onFinished = rootViewModel::completeIntro)
+                            }
+                        }
+                    }
                 }
             }
         }

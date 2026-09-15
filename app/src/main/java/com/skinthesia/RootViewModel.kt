@@ -34,10 +34,18 @@ class RootViewModel(
     private val _startDestination = MutableStateFlow<Any?>(null)
     val startDestination: StateFlow<Any?> = _startDestination.asStateFlow()
 
+    /** Whether the ~5s brand launch animation has played for this app process yet. */
+    private val _introShown = MutableStateFlow(false)
+    val introShown: StateFlow<Boolean> = _introShown.asStateFlow()
+
     init {
         viewModelScope.launch {
             _startDestination.value = runCatching { resolve() }.getOrDefault(WelcomeRoute)
         }
+    }
+
+    fun completeIntro() {
+        _introShown.value = true
     }
 
     private suspend fun resolve(): Any {

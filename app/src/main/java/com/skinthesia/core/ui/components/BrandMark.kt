@@ -1,22 +1,23 @@
 package com.skinthesia.core.ui.components
 
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.withTransform
-import androidx.compose.ui.graphics.vector.PathParser
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -26,70 +27,82 @@ import androidx.compose.ui.unit.dp
 import com.skinthesia.R
 import com.skinthesia.core.design.SkinthesiaTheme
 
-private const val MONOGRAM_GRID = 24f
-private const val MONOGRAM_S =
-    "M15.4,8.6 C15,7.3 13.7,6.5 12.1,6.5 C10.3,6.5 8.9,7.5 8.9,9 C8.9,12.3 15.3,10.6 15.3,14.6 " +
-        "C15.3,16.4 13.7,17.5 11.9,17.5 C10.2,17.5 8.9,16.7 8.5,15.4"
-
-/** The circular "S" monogram used in the app bar, splash and launcher. */
+/**
+ * The official Skinthesia emblem (the copper ring-and-monogram mark), rendered from
+ * the brand's own artwork - never redrawn or recolored. Used wherever the app needs
+ * a compact, recognisable mark: headers, onboarding, loading and empty states.
+ *
+ * Set [elevated] when the mark sits over photography, a gradient or another busy
+ * surface where the copper metal could lose contrast: it adds a soft, colourless
+ * backing glow behind the emblem rather than touching the artwork itself.
+ */
 @Composable
 fun BrandMonogram(
     modifier: Modifier = Modifier,
     size: Dp = 40.dp,
-    tint: Color = SkinthesiaTheme.colors.primary,
-    background: Color = Color.Transparent,
+    elevated: Boolean = false,
 ) {
+    val colors = SkinthesiaTheme.colors
     val description = stringResource(R.string.brand_monogram_cd)
-    val monogramPath = remember { PathParser().parsePathString(MONOGRAM_S).toPath() }
-    Canvas(
-        modifier = modifier
-            .size(size)
-            .semantics { contentDescription = description },
-    ) {
-        val scale = this.size.minDimension / MONOGRAM_GRID
-        if (background != Color.Transparent) {
-            drawCircle(color = background)
-        }
-        drawCircle(
-            color = tint,
-            radius = 9.5f * scale,
-            style = Stroke(width = 1.1f * scale),
-        )
-        withTransform({ scale(scale, scale, pivot = Offset.Zero) }) {
-            drawPath(
-                path = monogramPath,
-                color = tint,
-                style = Stroke(width = 1.5f, cap = StrokeCap.Round, join = StrokeJoin.Round),
+    Box(modifier = modifier.size(size), contentAlignment = Alignment.Center) {
+        if (elevated) {
+            Box(
+                modifier = Modifier
+                    .size(size * 1.32f)
+                    .blur(size * 0.22f)
+                    .background(colors.surface.copy(alpha = 0.78f), CircleShape),
             )
         }
+        Image(
+            painter = painterResource(R.drawable.brand_emblem),
+            contentDescription = null,
+            modifier = Modifier
+                .size(size)
+                .semantics { contentDescription = description },
+        )
     }
 }
 
 /**
- * Monogram, wordmark and tagline stacked as on the Welcome screen. Pass a
- * stronger [taglineColor] when the lockup sits over photography.
+ * The full official lockup (emblem + "Skinthesia" wordmark) at its exact source
+ * proportions, with the brand tagline set below in the app's own type. Pass a
+ * stronger [taglineColor] when the lockup sits over photography, and [elevated]
+ * when the artwork itself needs a soft backing to stay legible there.
  */
 @Composable
 fun BrandLockup(
     modifier: Modifier = Modifier,
-    monogramSize: Dp = 44.dp,
+    width: Dp = 200.dp,
     showTagline: Boolean = true,
     taglineColor: Color = SkinthesiaTheme.colors.textMuted,
+    elevated: Boolean = false,
 ) {
     val colors = SkinthesiaTheme.colors
     val typography = SkinthesiaTheme.typography
+    val name = stringResource(R.string.brand_name)
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        BrandMonogram(size = monogramSize)
-        Spacer(Modifier.height(10.dp))
-        Text(
-            text = stringResource(R.string.brand_name),
-            style = typography.brand,
-            color = colors.primary,
-            textAlign = TextAlign.Center,
-        )
+        Box(contentAlignment = Alignment.Center) {
+            if (elevated) {
+                Box(
+                    modifier = Modifier
+                        .width(width * 1.12f)
+                        .aspectRatio(LOCKUP_ASPECT)
+                        .blur(width * 0.1f)
+                        .background(colors.surface.copy(alpha = 0.72f), RoundedCornerShape(50)),
+                )
+            }
+            Image(
+                painter = painterResource(R.drawable.brand_lockup),
+                contentDescription = null,
+                modifier = Modifier
+                    .width(width)
+                    .aspectRatio(LOCKUP_ASPECT)
+                    .semantics { contentDescription = name },
+            )
+        }
         if (showTagline) {
             Spacer(Modifier.height(4.dp))
             Text(
@@ -101,3 +114,17 @@ fun BrandLockup(
         }
     }
 }
+
+/** Just the wordmark, for compact inline lockups (e.g. beside the emblem in a top bar). */
+@Composable
+fun BrandWordmark(modifier: Modifier = Modifier, height: Dp = 20.dp) {
+    Image(
+        painter = painterResource(R.drawable.brand_wordmark),
+        contentDescription = null,
+        modifier = modifier.height(height).aspectRatio(WORDMARK_ASPECT),
+    )
+}
+
+/** Source lockup art is 1200x737px; wordmark-only crop is 1200x220px. */
+private const val LOCKUP_ASPECT = 1200f / 737f
+private const val WORDMARK_ASPECT = 1200f / 220f

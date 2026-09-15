@@ -179,16 +179,12 @@ fun SkinthesiaTopBar(
                     .semantics { heading() },
             )
             showBrand -> Row(
-                modifier = Modifier.align(Alignment.Center),
+                modifier = Modifier.align(Alignment.Center).semantics { heading() },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                BrandMonogram(size = 24.dp)
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = "Skinthesia",
-                    style = typography.brand.copy(fontSize = 19.sp, lineHeight = 22.sp),
-                    color = colors.primary,
-                )
+                BrandMonogram(size = 22.dp)
+                Spacer(Modifier.width(7.dp))
+                BrandWordmark(height = 16.dp)
             }
         }
         Row(
@@ -240,7 +236,11 @@ fun IconAction(
     }
 }
 
-/** Editorial page header: optional overline, serif title and supporting line. */
+/**
+ * Editorial page header: optional overline, serif title and supporting line.
+ * Set [showMark] only on a screen's primary landing header (a tab home, not a
+ * drill-down) to add a small trailing Skinthesia mark beside the overline.
+ */
 @Composable
 fun ScreenHeader(
     title: String,
@@ -248,6 +248,7 @@ fun ScreenHeader(
     overline: String? = null,
     subtitle: String? = null,
     centered: Boolean = false,
+    showMark: Boolean = false,
     titleStyle: androidx.compose.ui.text.TextStyle = SkinthesiaTheme.typography.title,
 ) {
     val colors = SkinthesiaTheme.colors
@@ -258,7 +259,17 @@ fun ScreenHeader(
         horizontalAlignment = if (centered) Alignment.CenterHorizontally else Alignment.Start,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        if (overline != null) SectionOverline(text = overline)
+        if (overline != null) {
+            if (showMark) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    SectionOverline(text = overline, modifier = Modifier.weight(1f, fill = false))
+                    Spacer(Modifier.width(8.dp))
+                    BrandMonogram(size = 16.dp)
+                }
+            } else {
+                SectionOverline(text = overline)
+            }
+        }
         Text(
             text = title,
             style = titleStyle,

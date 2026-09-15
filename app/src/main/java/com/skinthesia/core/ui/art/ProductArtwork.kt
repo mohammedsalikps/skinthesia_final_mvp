@@ -40,13 +40,17 @@ private fun ProductTone.spec(): ToneSpec = when (this) {
  * Drawn packaging for catalogue products (dropper, pump, tube, jar, bottle) in the
  * product's tone, with a soft backdrop and a small label mark. Keeps the marketplace
  * cohesive until licensed product photography is supplied.
+ *
+ * [mark] is the label's own initial (e.g. its brand's first letter) - never the
+ * Skinthesia mark, so third-party products aren't mistaken for Skinthesia's own.
+ * Leave it blank for a plain label.
  */
 @Composable
 fun ProductArtwork(
     form: ProductForm,
     tone: ProductTone,
     modifier: Modifier = Modifier,
-    mark: String = "S",
+    mark: String = "",
     backdrop: Boolean = true,
     contentDescription: String? = null,
 ) {

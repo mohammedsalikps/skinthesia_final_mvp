@@ -187,7 +187,13 @@ fun ProductDetailScreen() {
                             .clip(SkinthesiaTheme.shapes.card)
                             .background(colors.surfaceMuted),
                     ) {
-                        ProductArtwork(form = product.form, tone = product.tone, modifier = Modifier.fillMaxSize(), contentDescription = product.name)
+                        ProductArtwork(
+                            form = product.form,
+                            tone = product.tone,
+                            modifier = Modifier.fillMaxSize(),
+                            mark = product.brand.take(1).uppercase(),
+                            contentDescription = product.name,
+                        )
                     }
                 }
                 Spacer(Modifier.height(spacing.md))

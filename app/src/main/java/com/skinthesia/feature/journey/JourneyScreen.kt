@@ -157,6 +157,7 @@ fun JourneyScreen(onSelectTab: (Int) -> Unit) {
             overline = "Journey",
             title = "Your $weeks weeks",
             subtitle = "Every check-in adds a point. The trend matters more than any single day.",
+            showMark = true,
         )
         Spacer(Modifier.height(spacing.lg))
         FadeInUp {

@@ -293,7 +293,7 @@ fun HomeScreen(onSelectTab: (Int) -> Unit) {
 
         state.article?.let { article ->
             Spacer(Modifier.height(spacing.lg))
-            SectionHeader(title = "For you", overline = "Picked for your goals")
+            SectionHeader(title = "For you", overline = "Picked for your goals", curated = true)
             Spacer(Modifier.height(12.dp))
             SkinthesiaCard(onClick = { navigator.navigate(ArticleRoute(article.id)) }) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

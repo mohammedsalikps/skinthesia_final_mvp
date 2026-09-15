@@ -145,7 +145,7 @@ fun MarketplaceScreen() {
         )
         if (query.isBlank() && filter == null && state.recommended.isNotEmpty()) {
             Spacer(Modifier.height(spacing.lg))
-            SectionHeader(title = "Matched to your plan", overline = "Recommended for you")
+            SectionHeader(title = "Matched to your plan", overline = "Recommended for you", curated = true)
             Spacer(Modifier.height(12.dp))
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 state.recommended.forEach { (recommendation, product) ->
@@ -184,6 +184,7 @@ fun ProductTile(product: Product, modifier: Modifier = Modifier, onClick: () -> 
             form = product.form,
             tone = product.tone,
             modifier = Modifier.fillMaxWidth().height(128.dp).clip(SkinthesiaTheme.shapes.tile),
+            mark = product.brand.take(1).uppercase(),
             contentDescription = null,
         )
         Spacer(Modifier.height(10.dp))
@@ -208,6 +209,7 @@ private fun RecommendedTile(product: Product, match: Int, onClick: () -> Unit) {
             form = product.form,
             tone = product.tone,
             modifier = Modifier.fillMaxWidth().height(104.dp).clip(SkinthesiaTheme.shapes.tile),
+            mark = product.brand.take(1).uppercase(),
             contentDescription = null,
         )
         Spacer(Modifier.height(10.dp))

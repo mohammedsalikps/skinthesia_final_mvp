@@ -66,6 +66,7 @@ import com.skinthesia.core.navigation.FlowKind
 import com.skinthesia.core.navigation.LocalAppNavigator
 import com.skinthesia.core.navigation.containerViewModel
 import com.skinthesia.core.navigation.toFlowKind
+import com.skinthesia.core.ui.components.BrandMonogram
 import com.skinthesia.core.ui.components.ErrorState
 import com.skinthesia.core.ui.components.FadeInUp
 import com.skinthesia.core.ui.components.ListRow
@@ -428,10 +429,9 @@ private fun CoreOrb() {
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(SkinthesiaIcons.Sparkle, contentDescription = null, tint = colors.primary, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.height(4.dp))
-            Text(text = "Skinthesia", style = typography.label, color = colors.textPrimary)
-            Text(text = "AI", style = typography.displayItalic.copy(fontSize = 18.sp, lineHeight = 22.sp), color = colors.primary)
+            BrandMonogram(size = 44.dp)
+            Spacer(Modifier.height(2.dp))
+            Text(text = "AI", style = typography.displayItalic.copy(fontSize = 16.sp, lineHeight = 20.sp), color = colors.primary)
         }
     }
 }

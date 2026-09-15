@@ -104,7 +104,7 @@ private fun WelcomeHero(hero: ImageSource, modifier: Modifier) {
                 .background(Brush.verticalGradient(0f to colors.background.copy(alpha = 0f), 0.6f to colors.background.copy(alpha = 0.85f), 1f to colors.background)),
         )
         FadeInUp(modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = spacing.lg)) {
-            BrandLockup(taglineColor = colors.textSecondary)
+            BrandLockup(width = 176.dp, taglineColor = colors.textSecondary, elevated = true)
         }
         FadeInUp(
             delayMillis = motion.stagger(2),

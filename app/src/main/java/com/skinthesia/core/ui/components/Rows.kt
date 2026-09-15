@@ -94,7 +94,11 @@ fun ListRow(
     }
 }
 
-/** Section title with an optional overline and a quiet trailing action link. */
+/**
+ * Section title with an optional overline and a quiet trailing action link.
+ * Set [curated] on a Skinthesia-picked selection (a recommendation shelf, not
+ * general browsing) to add a small trailing mark showing it's a Skinthesia pick.
+ */
 @Composable
 fun SectionHeader(
     title: String,
@@ -102,6 +106,7 @@ fun SectionHeader(
     overline: String? = null,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
+    curated: Boolean = false,
 ) {
     val colors = SkinthesiaTheme.colors
     val typography = SkinthesiaTheme.typography
@@ -120,6 +125,10 @@ fun SectionHeader(
                 color = colors.textPrimary,
                 modifier = Modifier.semantics { heading() },
             )
+        }
+        if (curated) {
+            Spacer(Modifier.width(8.dp))
+            BrandMonogram(size = 18.dp, modifier = Modifier.padding(bottom = 3.dp))
         }
         if (actionLabel != null && onAction != null) {
             Row(
