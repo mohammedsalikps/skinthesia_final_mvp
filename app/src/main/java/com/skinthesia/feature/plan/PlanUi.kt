@@ -1,5 +1,6 @@
 package com.skinthesia.feature.plan
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.semantics
@@ -259,25 +261,41 @@ fun LifestyleCard(suggestion: LifestyleSuggestion, modifier: Modifier = Modifier
     }
 }
 
+/**
+ * The Skinthesia AI treatment: a tinted editorial surface rather than a plain
+ * bordered card, so an AI-derived observation reads as intelligence being
+ * offered, not just another information block. Uses only the insight's own
+ * real title/body/sources - the quote styling is presentation, not new data.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun InsightCard(insight: Insight, modifier: Modifier = Modifier) {
     val colors = SkinthesiaTheme.colors
     val typography = SkinthesiaTheme.typography
-    SkinthesiaCard(modifier = modifier) {
-        Row(verticalAlignment = Alignment.Top) {
-            IconBadge(insight.kind.icon)
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(text = insight.title, style = typography.labelLarge, color = colors.textPrimary)
-                Spacer(Modifier.height(4.dp))
-                Text(text = insight.body, style = typography.bodySmall, color = colors.textSecondary)
-                if (insight.sources.isNotEmpty()) {
-                    Spacer(Modifier.height(8.dp))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        insight.sources.forEach { SourceBadge(it) }
-                    }
-                }
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(SkinthesiaTheme.shapes.large)
+            .background(Brush.linearGradient(listOf(colors.primaryMist, colors.blushMist)))
+            .padding(SkinthesiaTheme.spacing.lg),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(SkinthesiaIcons.Sparkle, contentDescription = null, tint = colors.primary, modifier = Modifier.size(13.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(text = "SKINTHESIA AI", style = typography.overline, color = colors.primary)
+        }
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = "“${insight.title}”",
+            style = typography.articleLead,
+            color = colors.textPrimary,
+        )
+        Spacer(Modifier.height(10.dp))
+        Text(text = insight.body, style = typography.bodySmall, color = colors.textSecondary)
+        if (insight.sources.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                insight.sources.forEach { SourceBadge(it) }
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.skinthesia.feature.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -56,6 +58,7 @@ import com.skinthesia.core.ui.components.SkinthesiaDivider
 import com.skinthesia.core.ui.components.SkinthesiaScreen
 import com.skinthesia.core.ui.components.Tag
 import com.skinthesia.core.ui.components.TagTone
+import com.skinthesia.core.ui.components.rememberReveal
 import com.skinthesia.core.ui.formatWeekday
 import com.skinthesia.core.ui.icons.SkinthesiaIcons
 import com.skinthesia.domain.model.Assessment
@@ -276,10 +279,18 @@ fun HomeScreen(onSelectTab: (Int) -> Unit) {
         SectionHeader(title = "Explore", overline = "Beyond your routine")
         Spacer(Modifier.height(12.dp))
         val tiles = listOf(
-            ExploreItem("Shop your routine", "Products matched to you", SkinthesiaIcons.Bag) { navigator.navigate(MarketplaceRoute()) },
-            ExploreItem("Talk to an expert", "Book a consultation", SkinthesiaIcons.Chat) { navigator.navigate(ExpertsRoute) },
-            ExploreItem("Learn", "Evidence-based guides", SkinthesiaIcons.Learn) { onSelectTab(3) },
-            ExploreItem("Community", "Questions and stories", SkinthesiaIcons.Community) { onSelectTab(3) },
+            ExploreItem("Shop your routine", "Products matched to you", SkinthesiaIcons.Bag, colors.primaryMist, colors.primary) {
+                navigator.navigate(MarketplaceRoute())
+            },
+            ExploreItem("Talk to an expert", "Book a consultation", SkinthesiaIcons.Chat, colors.warningSoft, colors.warningStrong) {
+                navigator.navigate(ExpertsRoute)
+            },
+            ExploreItem("Learn", "Evidence-based guides", SkinthesiaIcons.Learn, colors.successSoft, colors.successStrong) {
+                onSelectTab(3)
+            },
+            ExploreItem("Community", "Questions and stories", SkinthesiaIcons.Community, colors.goldSoft, colors.goldStrong) {
+                onSelectTab(3)
+            },
         )
         tiles.chunked(2).forEachIndexed { rowIndex, row ->
             if (rowIndex > 0) Spacer(Modifier.height(12.dp))
@@ -360,16 +371,41 @@ private fun RoutineTile(time: RoutineTime, progress: Pair<Int, Int>, modifier: M
             Spacer(Modifier.width(8.dp))
             Text(text = time.label, style = typography.label, color = colors.textPrimary)
         }
-        Spacer(Modifier.height(12.dp))
-        Text(text = if (due == 0) "Rest day" else "$done of $due", style = typography.titleSmall, color = colors.textPrimary)
-        Spacer(Modifier.height(8.dp))
-        LevelBar(
-            fraction = if (due == 0) 1f else done.toFloat() / due,
-            color = if (complete) colors.success else colors.primary,
-            height = 4.dp,
+        Spacer(Modifier.height(14.dp))
+        if (due == 0) {
+            Text(text = "Rest day", style = typography.titleSmall, color = colors.textPrimary)
+        } else {
+            StepDots(done = done, due = due, color = if (complete) colors.success else colors.primary)
+        }
+        Spacer(Modifier.height(10.dp))
+        Text(
+            text = if (due == 0) "Nothing scheduled" else if (complete) "Complete" else "$done of $due steps done",
+            style = typography.caption,
+            color = if (complete) colors.success else colors.textMuted,
         )
-        Spacer(Modifier.height(8.dp))
-        Text(text = if (complete) "Complete" else "steps done", style = typography.caption, color = if (complete) colors.success else colors.textMuted)
+    }
+}
+
+/** One dot per step, filling to a checkmark as it's completed - the routine's progress at a glance. */
+@Composable
+private fun StepDots(done: Int, due: Int, color: Color, modifier: Modifier = Modifier) {
+    val colors = SkinthesiaTheme.colors
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        repeat(due) { i ->
+            val filled = i < done
+            val scale = if (filled) rememberReveal(1f, key = filled, durationMillis = 260).value else 1f
+            Box(
+                modifier = Modifier
+                    .size(18.dp)
+                    .graphicsLayer { scaleX = 0.7f + 0.3f * scale; scaleY = 0.7f + 0.3f * scale }
+                    .clip(CircleShape)
+                    .background(if (filled) color else Color.Transparent)
+                    .border(1.4.dp, if (filled) color else colors.border, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (filled) Icon(SkinthesiaIcons.Check, contentDescription = null, tint = colors.textOnPrimary, modifier = Modifier.size(10.dp))
+            }
+        }
     }
 }
 
@@ -417,14 +453,23 @@ private fun CheckInCard(week: Int, demo: Boolean, complete: Boolean, onStart: ()
     }
 }
 
-private data class ExploreItem(val title: String, val subtitle: String, val icon: ImageVector, val onClick: () -> Unit)
+private data class ExploreItem(
+    val title: String,
+    val subtitle: String,
+    val icon: ImageVector,
+    val container: Color,
+    val tint: Color,
+    val onClick: () -> Unit,
+)
 
+/** Each destination gets its own accent from the existing palette, so the four
+ * reads as four distinct places to go rather than four copies of one tile. */
 @Composable
 private fun ExploreTile(item: ExploreItem, modifier: Modifier) {
     val colors = SkinthesiaTheme.colors
     val typography = SkinthesiaTheme.typography
     SkinthesiaCard(modifier = modifier, onClick = item.onClick) {
-        IconBadge(item.icon)
+        IconBadge(item.icon, container = item.container, tint = item.tint)
         Spacer(Modifier.height(12.dp))
         Text(text = item.title, style = typography.label, color = colors.textPrimary)
         Spacer(Modifier.height(2.dp))

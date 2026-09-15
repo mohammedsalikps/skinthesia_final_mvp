@@ -25,10 +25,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.skinthesia.core.design.SkinthesiaPalette
 import com.skinthesia.core.design.SkinthesiaTheme
 
 /** One destination in the bottom bar. */
@@ -96,13 +98,15 @@ private fun BottomBarSlot(
         label = "tabDot",
     )
     Column(
-        modifier = modifier.selectable(
-            selected = selected,
-            interactionSource = interaction,
-            indication = null,
-            role = Role.Tab,
-            onClick = onClick,
-        ),
+        modifier = modifier
+            .pressScale(interaction, pressedScale = 0.94f)
+            .selectable(
+                selected = selected,
+                interactionSource = interaction,
+                indication = null,
+                role = Role.Tab,
+                onClick = onClick,
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -114,6 +118,12 @@ private fun BottomBarSlot(
             )
             Box(
                 modifier = Modifier
+                    .shadow(
+                        elevation = 6.dp,
+                        shape = CircleShape,
+                        ambientColor = SkinthesiaPalette.Cocoa.copy(alpha = 0.22f),
+                        spotColor = SkinthesiaPalette.Cocoa.copy(alpha = 0.22f),
+                    )
                     .size(40.dp)
                     .clip(CircleShape)
                     .background(container)
