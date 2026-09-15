@@ -87,6 +87,8 @@ fun ScoreRing(
     label: String? = null,
     animate: Boolean = true,
     delayMillis: Int = 200,
+    /** Overrides the default numeral/caption/label column when supplied. */
+    centerContent: (@Composable () -> Unit)? = null,
 ) {
     val colors = SkinthesiaTheme.colors
     val typography = SkinthesiaTheme.typography
@@ -141,12 +143,16 @@ fun ScoreRing(
                 drawCircle(colors.surfaceElevated, radius = stroke * 0.32f, center = dot)
             }
         }
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = shown.toString(), style = typography.scoreNumeral, color = colors.textPrimary)
-            if (caption != null) Text(text = caption, style = typography.metricUnit, color = colors.textMuted)
-            if (label != null) {
-                Spacer(Modifier.height(10.dp))
-                Tag(text = label, tone = TagTone.SAGE)
+        if (centerContent != null) {
+            centerContent()
+        } else {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(text = shown.toString(), style = typography.scoreNumeral, color = colors.textPrimary)
+                if (caption != null) Text(text = caption, style = typography.metricUnit, color = colors.textMuted)
+                if (label != null) {
+                    Spacer(Modifier.height(10.dp))
+                    Tag(text = label, tone = TagTone.SAGE)
+                }
             }
         }
     }

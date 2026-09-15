@@ -59,7 +59,8 @@ import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-private fun SkinPrintDimension.icon(): ImageVector = when (this) {
+/** Shared with [SkinPrintScoreCircle] - one icon per dimension across every SkinPrint visualization. */
+fun SkinPrintDimension.icon(): ImageVector = when (this) {
     SkinPrintDimension.CLARITY -> SkinthesiaIcons.Glow
     SkinPrintDimension.EVEN_TONE -> SkinthesiaIcons.EvenTone
     SkinPrintDimension.TEXTURE -> SkinthesiaIcons.Texture

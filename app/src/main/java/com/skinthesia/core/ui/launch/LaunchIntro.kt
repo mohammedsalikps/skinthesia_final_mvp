@@ -43,10 +43,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.skinthesia.R
 import com.skinthesia.core.design.SkinthesiaTheme
-import com.skinthesia.core.ui.art.ProductArtwork
 import com.skinthesia.core.ui.components.BrandWordmark
-import com.skinthesia.domain.model.ProductForm
-import com.skinthesia.domain.model.ProductTone
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
@@ -56,12 +53,14 @@ private const val REDUCED_DURATION_MS = 900
 
 /**
  * The Skinthesia opening: a cinematic ~5 second brand moment shown once per app
- * launch, after the system splash hands off. A calm ivory field gathers light,
- * science-inspired data points and skincare silhouettes toward its centre; they
- * dissolve into fine particles that converge and are swept by light into the
- * official emblem, which the "Skinthesia" wordmark then settles beneath.
+ * launch, after the system splash hands off, telling one story in five beats -
+ * SKIN DATA -> INTELLIGENCE -> SKINTHESIA:
  *
- * SKIN + SCIENCE + DATA + INTELLIGENCE -> SKINTHESIA.
+ *   0.0-1.0s  A calm ivory field; fine, scientific particles begin appearing.
+ *   1.0-2.0s  They connect with thin lines - an elegant biological/AI network.
+ *   2.0-3.0s  The network organizes, gathering into the shape of the emblem.
+ *   3.0-4.0s  The official emblem resolves sharply, crossed once by soft light.
+ *   4.0-5.0s  The "Skinthesia" wordmark and tagline settle beneath it, and hold.
  *
  * Progress is a single deterministic, time-based value so every phase lands at
  * the same moment on every device and can't drift or desync; tapping anywhere
@@ -98,7 +97,6 @@ fun LaunchIntro(onFinished: () -> Unit, modifier: Modifier = Modifier) {
             ReducedRevealContent(t)
         } else {
             AmbientDust(t)
-            FloatingProducts(t)
             ParticleField(t)
             RevealContent(t)
         }
@@ -127,8 +125,8 @@ private fun EnvironmentGlow(t: Float, reducedMotion: Boolean) {
 
 /**
  * A handful of fine, ring-only "data points" that begin drifting the instant the
- * screen is almost empty (phase 1), well before the skincare silhouettes and the
- * main particle system arrive - the quiet, scientific opening beat.
+ * screen is almost empty (beat 1), just ahead of the main particle system - the
+ * quiet, scientific opening beat.
  */
 private data class DustMote(val angle: Float, val radius: Float, val size: Float, val speed: Float)
 
@@ -141,7 +139,7 @@ private val DUST = List(9) { i ->
 private fun AmbientDust(t: Float) {
     val colors = SkinthesiaTheme.colors
     val density = LocalDensity.current
-    val alphaEnvelope = remap(t, 0.0f, 0.08f) * (1f - remap(t, 0.26f, 0.4f))
+    val alphaEnvelope = remap(t, 0.0f, 0.08f) * (1f - remap(t, 0.16f, 0.26f))
     if (alphaEnvelope <= 0.01f) return
     Canvas(Modifier.fillMaxSize()) {
         val cx = size.width / 2f
@@ -162,55 +160,15 @@ private fun AmbientDust(t: Float) {
     }
 }
 
-private data class IntroProduct(
-    val form: ProductForm,
-    val tone: ProductTone,
-    val startX: Float,
-    val startY: Float,
-    val wobbleFreq: Float,
-    val wobblePhase: Float,
+/** Four quadrant origins the particle system drifts outward from before converging. */
+private data class ParticleOrigin(val startX: Float, val startY: Float)
+
+private val PARTICLE_ORIGINS = listOf(
+    ParticleOrigin(-100f, -68f),
+    ParticleOrigin(104f, -60f),
+    ParticleOrigin(-92f, 82f),
+    ParticleOrigin(96f, 88f),
 )
-
-private val INTRO_PRODUCTS = listOf(
-    IntroProduct(ProductForm.DROPPER, ProductTone.CLAY, -100f, -68f, 1.4f, 0.0f),
-    IntroProduct(ProductForm.PUMP, ProductTone.SAGE, 104f, -60f, 1.1f, 1.4f),
-    IntroProduct(ProductForm.JAR, ProductTone.BLUSH, -92f, 82f, 1.3f, 2.6f),
-    IntroProduct(ProductForm.TUBE, ProductTone.AMBER, 96f, 88f, 1.0f, 4.0f),
-)
-
-@Composable
-private fun FloatingProducts(t: Float) {
-    INTRO_PRODUCTS.forEachIndexed { index, product ->
-        val delay = index * 0.02f
-        val fadeIn = remap(t, 0.1f + delay, 0.22f + delay)
-        val fadeOut = 1f - remap(t, 0.38f + delay, 0.53f + delay)
-        val alpha = (fadeIn * fadeOut).coerceIn(0f, 1f)
-        if (alpha <= 0f) return@forEachIndexed
-
-        val orbit = easeInOut(remap(t, 0.12f, 0.5f))
-        val settle = 1f - 0.5f * orbit
-        val wobble = sin(t * product.wobbleFreq * 6.2832f + product.wobblePhase)
-        val x = product.startX * settle + wobble * 5f
-        val y = product.startY * settle + cos(t * product.wobbleFreq * 5.1f + product.wobblePhase) * 4f
-        val productScale = 0.82f + 0.18f * fadeIn
-
-        Box(
-            modifier = Modifier
-                .size(52.dp)
-                .offsetDp(x, y)
-                .scale(productScale)
-                .alpha(alpha),
-        ) {
-            ProductArtwork(
-                form = product.form,
-                tone = product.tone,
-                modifier = Modifier.fillMaxSize(),
-                mark = "",
-                backdrop = false,
-            )
-        }
-    }
-}
 
 /**
  * Fixed, deterministic UV points sampled from the emblem's own silhouette (via
@@ -236,6 +194,11 @@ private val EMBLEM_TARGETS = listOf(
 
 private const val EMBLEM_REVEAL_DP = 116f
 
+/**
+ * Beat 1-3 of the opening: fine particles appear (0.0-0.2), connect with thin
+ * lines into an elegant network (0.2-0.4), then that network organizes and
+ * gathers into the real emblem's own silhouette (0.4-0.62) for beat 4 to resolve.
+ */
 @Composable
 private fun ParticleField(t: Float) {
     val colors = SkinthesiaTheme.colors
@@ -246,28 +209,53 @@ private fun ParticleField(t: Float) {
         val cx = size.width / 2f
         val cy = size.height / 2f
         val pxPerDp = density.density
+        val converge = easeInOut(remap(t, 0.38f, 0.62f))
 
-        EMBLEM_TARGETS.forEachIndexed { i, (u, v) ->
-            val product = INTRO_PRODUCTS[i % INTRO_PRODUCTS.size]
+        val points = EMBLEM_TARGETS.mapIndexed { i, (u, v) ->
+            val origin = PARTICLE_ORIGINS[i % PARTICLE_ORIGINS.size]
             val jitterAngle = i * 2.399963f
             val jitterRadius = (14f + (i % 7) * 4f) * pxPerDp
-            val startX = cx + (product.startX * pxPerDp) + cos(jitterAngle) * jitterRadius
-            val startY = cy + (product.startY * pxPerDp) + sin(jitterAngle) * jitterRadius
+            val startX = cx + (origin.startX * pxPerDp) + cos(jitterAngle) * jitterRadius
+            val startY = cy + (origin.startY * pxPerDp) + sin(jitterAngle) * jitterRadius
             val targetX = cx + (u - 0.5f) * EMBLEM_REVEAL_DP * pxPerDp
             val targetY = cy + (v - 0.5f) * EMBLEM_REVEAL_DP * pxPerDp
 
-            val fadeIn = remap(t, 0.14f + (i % 5) * 0.01f, 0.26f)
-            val fadeOut = 1f - remap(t, 0.62f, 0.73f)
-            val particleAlpha = (fadeIn * fadeOut).coerceIn(0f, 1f)
-            if (particleAlpha <= 0.01f) return@forEachIndexed
-
-            val converge = easeInOut(remap(t, 0.34f, 0.65f))
+            val fadeIn = remap(t, 0.04f + (i % 5) * 0.012f, 0.2f)
+            val fadeOut = 1f - remap(t, 0.6f, 0.72f)
+            val alpha = (fadeIn * fadeOut).coerceIn(0f, 1f)
             val px = lerp(startX, targetX, converge)
             val py = lerp(startY, targetY, converge)
-            val radius = (1.1f + (i % 4) * 0.5f) * pxPerDp
+            Triple(Offset(px, py), alpha, (1.1f + (i % 4) * 0.5f) * pxPerDp)
+        }
 
-            drawCircle(color = glowColor.copy(alpha = particleAlpha * 0.25f), radius = radius * 2.4f, center = Offset(px, py))
-            drawCircle(color = particleColor.copy(alpha = particleAlpha * 0.9f), radius = radius, center = Offset(px, py))
+        // Beat 2: a quiet network of thin lines between nearby particles, its
+        // own presence fading in and out well before convergence tightens.
+        val networkAlpha = remap(t, 0.2f, 0.28f) * (1f - remap(t, 0.38f, 0.46f))
+        if (networkAlpha > 0.01f) {
+            val linkPx = 96f * pxPerDp
+            for (i in points.indices) {
+                val (pi, ai, _) = points[i]
+                if (ai <= 0.05f) continue
+                for (j in i + 1 until points.size) {
+                    val (pj, aj, _) = points[j]
+                    if (aj <= 0.05f) continue
+                    val dx = pi.x - pj.x
+                    val dy = pi.y - pj.y
+                    val distSq = dx * dx + dy * dy
+                    if (distSq > linkPx * linkPx) continue
+                    val proximity = 1f - kotlin.math.sqrt(distSq) / linkPx
+                    val lineAlpha = networkAlpha * ai * aj * proximity * 0.5f
+                    if (lineAlpha > 0.008f) {
+                        drawLine(particleColor.copy(alpha = lineAlpha), pi, pj, strokeWidth = 0.7f * pxPerDp)
+                    }
+                }
+            }
+        }
+
+        points.forEach { (p, alpha, radius) ->
+            if (alpha <= 0.01f) return@forEach
+            drawCircle(color = glowColor.copy(alpha = alpha * 0.25f), radius = radius * 2.4f, center = p)
+            drawCircle(color = particleColor.copy(alpha = alpha * 0.9f), radius = radius, center = p)
         }
     }
 }
@@ -275,11 +263,11 @@ private fun ParticleField(t: Float) {
 @Composable
 private fun RevealContent(t: Float) {
     val colors = SkinthesiaTheme.colors
-    val emblemAlpha = remap(t, 0.5f, 0.67f)
-    val glow = bellCurve(t, 0.62f, 0.1f)
-    val sweepT = remap(t, 0.55f, 0.71f)
+    val emblemAlpha = remap(t, 0.56f, 0.72f)
+    val glow = bellCurve(t, 0.68f, 0.1f)
+    val sweepT = remap(t, 0.6f, 0.76f)
     val sweepAlpha = (1f - abs(2f * sweepT - 1f)).coerceIn(0f, 1f)
-    val wordmarkT = remap(t, 0.71f, 0.86f)
+    val wordmarkT = remap(t, 0.78f, 0.92f)
     val wordmarkOffset = (1f - easeOut(wordmarkT)) * 10f
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {

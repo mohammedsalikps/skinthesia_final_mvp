@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -32,6 +33,7 @@ fun SkinthesiaImage(
     contentScale: ContentScale = ContentScale.Crop,
     alignment: Alignment = Alignment.Center,
     maxDimension: Int = 1600,
+    colorFilter: ColorFilter? = null,
 ) {
     val colors = SkinthesiaTheme.colors
     val motion = SkinthesiaTheme.motion
@@ -42,6 +44,7 @@ fun SkinthesiaImage(
             modifier = modifier,
             alignment = alignment,
             contentScale = contentScale,
+            colorFilter = colorFilter,
         )
 
         is ImageSource.LocalFile -> {
@@ -61,6 +64,7 @@ fun SkinthesiaImage(
                             modifier = Modifier.fillMaxSize(),
                             alignment = alignment,
                             contentScale = contentScale,
+                            colorFilter = colorFilter,
                         )
                     } else {
                         Box(Modifier.fillMaxSize())

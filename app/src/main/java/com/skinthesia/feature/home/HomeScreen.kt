@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -43,31 +44,38 @@ import com.skinthesia.core.navigation.ExpertsRoute
 import com.skinthesia.core.navigation.LocalAppNavigator
 import com.skinthesia.core.navigation.MarketplaceRoute
 import com.skinthesia.core.navigation.PlanRoute
+import com.skinthesia.core.navigation.ReportRoute
 import com.skinthesia.core.navigation.RoutineRoute
 import com.skinthesia.core.navigation.SkinPrintRoute
 import com.skinthesia.core.navigation.containerViewModel
+import com.skinthesia.core.ui.art.FaceDiagram
+import com.skinthesia.core.ui.art.ProbeIllustration
+import com.skinthesia.core.ui.art.ProbeVisualState
+import com.skinthesia.core.ui.components.BrandMonogram
 import com.skinthesia.core.ui.components.DeltaBadge
 import com.skinthesia.core.ui.components.EmptyState
 import com.skinthesia.core.ui.components.FadeInUp
 import com.skinthesia.core.ui.components.LoadingState
 import com.skinthesia.core.ui.components.SectionHeader
 import com.skinthesia.core.ui.components.SectionOverline
-import com.skinthesia.core.ui.components.SkinPrintRadial
+import com.skinthesia.core.ui.components.SkinPrintScoreCircle
 import com.skinthesia.core.ui.components.SkinthesiaCard
 import com.skinthesia.core.ui.components.SkinthesiaDivider
+import com.skinthesia.core.ui.components.SkinthesiaImage
 import com.skinthesia.core.ui.components.SkinthesiaScreen
 import com.skinthesia.core.ui.components.Tag
 import com.skinthesia.core.ui.components.TagTone
 import com.skinthesia.core.ui.components.rememberReveal
+import com.skinthesia.core.ui.formatDateTime
 import com.skinthesia.core.ui.formatWeekday
 import com.skinthesia.core.ui.icons.SkinthesiaIcons
 import com.skinthesia.domain.model.Assessment
 import com.skinthesia.domain.model.AssessmentKind
+import com.skinthesia.domain.model.ImageSource
 import com.skinthesia.domain.model.LearningArticle
 import com.skinthesia.domain.model.PersonalizedPlan
 import com.skinthesia.domain.model.RoutineTime
 import com.skinthesia.domain.model.SkinPrint
-import com.skinthesia.domain.model.SkinPrintDimension
 import com.skinthesia.domain.model.UserProfile
 import com.skinthesia.domain.model.stepsDueOn
 import com.skinthesia.domain.repository.AssessmentRepository
@@ -104,6 +112,7 @@ data class HomeUiState(
     val programmeComplete: Boolean = false,
     val demoTimeline: Boolean = true,
     val article: LearningArticle? = null,
+    val pairedDeviceId: String? = null,
 )
 
 class HomeViewModel(
@@ -158,6 +167,7 @@ class HomeViewModel(
             demoTimeline = s.demoTimeline,
             article = articles.filter { a -> a.relevantGoals.any { it in goals } }.sortedByDescending { it.featured }.firstOrNull()
                 ?: articles.firstOrNull(),
+            pairedDeviceId = p.pairedDeviceId,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 }
@@ -166,14 +176,6 @@ private fun greeting(): String = when (LocalTime.now().hour) {
     in 5..11 -> "Good morning"
     in 12..16 -> "Good afternoon"
     else -> "Good evening"
-}
-
-private fun SkinPrintDimension.short(): String = when (this) {
-    SkinPrintDimension.CLARITY -> "Clarity"
-    SkinPrintDimension.EVEN_TONE -> "Tone"
-    SkinPrintDimension.TEXTURE -> "Texture"
-    SkinPrintDimension.HYDRATION -> "Hydration"
-    SkinPrintDimension.PORE_APPEARANCE -> "Pores"
 }
 
 /** Screen 28: the daily home. SkinPrint, today's routine, the next check-in and what to explore. */
@@ -235,23 +237,15 @@ fun HomeScreen(onSelectTab: (Int) -> Unit) {
             )
         }
 
-        Spacer(Modifier.height(spacing.lg))
-        SectionHeader(title = "Today's routine", overline = "Tick off as you go", actionLabel = "Plan", onAction = { navigator.navigate(PlanRoute()) })
-        Spacer(Modifier.height(12.dp))
-        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            RoutineTile(RoutineTime.MORNING, state.morning, Modifier.weight(1f).fillMaxHeight()) { navigator.navigate(RoutineRoute(RoutineTime.MORNING.name)) }
-            RoutineTile(RoutineTime.EVENING, state.evening, Modifier.weight(1f).fillMaxHeight()) { navigator.navigate(RoutineRoute(RoutineTime.EVENING.name)) }
-        }
-
-        Spacer(Modifier.height(spacing.md))
-        FadeInUp(delayMillis = motion.stagger(1)) {
-            CheckInCard(
-                week = state.nextCheckInWeek,
-                demo = state.demoTimeline,
-                complete = state.programmeComplete,
-                onStart = { navigator.navigate(CheckInIntroRoute) },
-                onJourney = { onSelectTab(1) },
-            )
+        if (latest != null && skinPrint != null) {
+            Spacer(Modifier.height(spacing.md))
+            FadeInUp(delayMillis = motion.stagger(1)) {
+                LatestAnalysisCard(
+                    assessment = latest,
+                    insight = latest.combined?.insights?.firstOrNull()?.title,
+                    onOpen = { navigator.navigate(ReportRoute(latest.id)) },
+                )
+            }
         }
 
         val focus = latest?.combined?.focusAreas.orEmpty()
@@ -274,6 +268,31 @@ fun HomeScreen(onSelectTab: (Int) -> Unit) {
             Spacer(Modifier.height(12.dp))
             InsightCard(insight)
         }
+
+        Spacer(Modifier.height(spacing.lg))
+        FadeInUp(delayMillis = motion.stagger(2)) {
+            ProbeCtaCard(
+                paired = state.pairedDeviceId != null,
+                onClick = { navigator.navigate(CheckInIntroRoute) },
+            )
+        }
+
+        Spacer(Modifier.height(spacing.lg))
+        SectionHeader(title = "Today's routine", overline = "Tick off as you go", actionLabel = "Plan", onAction = { navigator.navigate(PlanRoute()) })
+        Spacer(Modifier.height(12.dp))
+        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            RoutineTile(RoutineTime.MORNING, state.morning, Modifier.weight(1f).fillMaxHeight()) { navigator.navigate(RoutineRoute(RoutineTime.MORNING.name)) }
+            RoutineTile(RoutineTime.EVENING, state.evening, Modifier.weight(1f).fillMaxHeight()) { navigator.navigate(RoutineRoute(RoutineTime.EVENING.name)) }
+        }
+
+        Spacer(Modifier.height(spacing.md))
+        CheckInCard(
+            week = state.nextCheckInWeek,
+            demo = state.demoTimeline,
+            complete = state.programmeComplete,
+            onStart = { navigator.navigate(CheckInIntroRoute) },
+            onJourney = { onSelectTab(1) },
+        )
 
         Spacer(Modifier.height(spacing.lg))
         SectionHeader(title = "Explore", overline = "Beyond your routine")
@@ -326,7 +345,11 @@ private fun SkinPrintHero(skinPrint: SkinPrint, weekLabel: String, baseline: Ski
     SkinthesiaCard(onClick = onOpen, elevated = true) {
         Row(verticalAlignment = Alignment.Top) {
             Column(Modifier.weight(1f)) {
-                SectionOverline(text = "Your SkinPrint")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    SectionOverline(text = "Your SkinPrint", modifier = Modifier.weight(1f, fill = false))
+                    Spacer(Modifier.width(8.dp))
+                    BrandMonogram(size = 16.dp)
+                }
                 Spacer(Modifier.height(6.dp))
                 Text(text = skinPrint.band.label, style = typography.titleMedium, color = colors.textPrimary)
                 Spacer(Modifier.height(8.dp))
@@ -347,15 +370,109 @@ private fun SkinPrintHero(skinPrint: SkinPrint, weekLabel: String, baseline: Ski
             }
             Text(text = "Updated $weekLabel", style = typography.caption, color = colors.textMuted)
         }
-        Spacer(Modifier.height(6.dp))
-        SkinPrintRadial(
+        Spacer(Modifier.height(10.dp))
+        SkinPrintScoreCircle(
             scores = skinPrint.scores,
             overall = skinPrint.overall,
             band = skinPrint.band,
-            size = 232.dp,
+            size = 208.dp,
             previous = baseline?.scores?.associate { it.dimension to it.value },
-            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+            modifier = Modifier.fillMaxWidth(),
         )
+    }
+}
+
+/**
+ * The real photo behind the latest analysis, presented as part of the product
+ * experience rather than a plain thumbnail - the date/time and headline insight
+ * are the same values already shown elsewhere (Report, InsightCard); nothing new.
+ */
+@Composable
+private fun LatestAnalysisCard(assessment: Assessment, insight: String?, onOpen: () -> Unit) {
+    val colors = SkinthesiaTheme.colors
+    val typography = SkinthesiaTheme.typography
+    SkinthesiaCard(onClick = onOpen) {
+        SectionOverline(text = "Your latest analysis")
+        Spacer(Modifier.height(10.dp))
+        Row(verticalAlignment = Alignment.Top) {
+            Box(
+                modifier = Modifier
+                    .size(84.dp)
+                    .clip(SkinthesiaTheme.shapes.tile)
+                    .background(colors.surfaceMuted),
+            ) {
+                val path = assessment.photo?.filePath
+                if (path != null) {
+                    SkinthesiaImage(
+                        source = ImageSource.LocalFile(path),
+                        contentDescription = "Your latest selfie",
+                        modifier = Modifier.fillMaxSize(),
+                        maxDimension = 400,
+                    )
+                } else {
+                    FaceDiagram(contentDescription = "Face outline", modifier = Modifier.fillMaxSize().padding(10.dp))
+                }
+            }
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = assessment.completedAt?.let { formatDateTime(it) } ?: assessment.weekLabel,
+                    style = typography.caption,
+                    color = colors.textMuted,
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = insight ?: "Your SkinPrint and full report from this analysis.",
+                    style = typography.bodySmall,
+                    color = colors.textPrimary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(Modifier.height(10.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "View analysis", style = typography.label, color = colors.primary)
+                    Spacer(Modifier.width(4.dp))
+                    Icon(SkinthesiaIcons.ChevronRight, contentDescription = null, tint = colors.primary, modifier = Modifier.size(14.dp))
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The probe is a real differentiator, not just another card - a compact hero
+ * with the actual product photo. Tapping it reuses the existing check-in entry
+ * point (the same destination as "Start Check-in" below), never a new flow.
+ */
+@Composable
+private fun ProbeCtaCard(paired: Boolean, onClick: () -> Unit) {
+    val colors = SkinthesiaTheme.colors
+    val typography = SkinthesiaTheme.typography
+    SkinthesiaCard(onClick = onClick) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                SectionOverline(text = "Skinthesia Probe")
+                Spacer(Modifier.height(6.dp))
+                Text(text = "Measure beyond the camera.", style = typography.titleSmall, color = colors.textPrimary)
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = if (paired) "Paired · connects when you measure" else "Hydration, pH and temperature, straight from your skin.",
+                    style = typography.bodySmall,
+                    color = colors.textSecondary,
+                )
+                Spacer(Modifier.height(12.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = if (paired) "Take a reading" else "Connect Probe", style = typography.label, color = colors.primary)
+                    Spacer(Modifier.width(4.dp))
+                    Icon(SkinthesiaIcons.ChevronRight, contentDescription = null, tint = colors.primary, modifier = Modifier.size(14.dp))
+                }
+            }
+            Spacer(Modifier.width(8.dp))
+            ProbeIllustration(
+                state = if (paired) ProbeVisualState.CONNECTED else ProbeVisualState.IDLE,
+                modifier = Modifier.width(52.dp).height(110.dp),
+            )
+        }
     }
 }
 

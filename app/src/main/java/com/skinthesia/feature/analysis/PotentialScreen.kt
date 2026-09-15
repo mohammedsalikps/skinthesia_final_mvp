@@ -5,13 +5,16 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -36,11 +39,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -70,9 +76,11 @@ import com.skinthesia.core.ui.components.SkinthesiaDivider
 import com.skinthesia.core.ui.components.SkinthesiaPrimaryButton
 import com.skinthesia.core.ui.components.SkinthesiaScreen
 import com.skinthesia.core.ui.components.SkinthesiaTopBar
+import com.skinthesia.core.ui.components.SkinthesiaImage
 import com.skinthesia.core.ui.components.Tag
 import com.skinthesia.core.ui.components.TagTone
 import com.skinthesia.core.ui.icons.SkinthesiaIcons
+import com.skinthesia.domain.model.ImageSource
 import com.skinthesia.domain.model.PotentialDimension
 import com.skinthesia.domain.model.PotentialState
 import com.skinthesia.domain.repository.AssessmentRepository
@@ -90,6 +98,8 @@ data class PotentialUiState(
     val potential: PotentialState? = null,
     val statement: String = "",
     val focus: List<String> = emptyList(),
+    /** The user's own Week 1 photo - the only real image in the projection; every later week is a filter over it. */
+    val photoPath: String? = null,
 )
 
 class PotentialViewModel(
@@ -105,13 +115,15 @@ class PotentialViewModel(
 
     init {
         viewModelScope.launch {
-            val skinPrint = assessments.get(assessmentId)?.skinPrint
+            val assessment = assessments.get(assessmentId)
+            val skinPrint = assessment?.skinPrint
             val profile = profiles.current()
             _state.value = PotentialUiState(
                 loading = false,
                 potential = skinPrint?.let { estimator.estimate(it, profile.goals) },
                 statement = profile.goals.statement.takeIf { it.isNotBlank() } ?: GoalStatements.DEFAULT,
                 focus = profile.goals.ranked.take(3).map { it.label },
+                photoPath = assessment?.photo?.filePath,
             )
         }
     }
@@ -172,14 +184,14 @@ fun PotentialScreen() {
                 subtitle = "Complete a selfie analysis to see where consistent care could take you.",
                 centered = true,
             )
-            else -> PotentialContent(potential = potential, statement = state.statement, week = week, onWeek = { week = it })
+            else -> PotentialContent(potential = potential, statement = state.statement, photoPath = state.photoPath, week = week, onWeek = { week = it })
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PotentialContent(potential: PotentialState, statement: String, week: Int, onWeek: (Int) -> Unit) {
+private fun PotentialContent(potential: PotentialState, statement: String, photoPath: String?, week: Int, onWeek: (Int) -> Unit) {
     val colors = SkinthesiaTheme.colors
     val typography = SkinthesiaTheme.typography
     val spacing = SkinthesiaTheme.spacing
@@ -195,8 +207,14 @@ private fun PotentialContent(potential: PotentialState, statement: String, week:
     }
     Spacer(Modifier.height(spacing.lg))
     FadeInUp(delayMillis = motion.stagger(1)) { CompareHeader(current = potential.currentOverall, low = low, high = high, week = week) }
+    if (photoPath != null) {
+        Spacer(Modifier.height(spacing.md))
+        FadeInUp(delayMillis = motion.stagger(2)) {
+            VisualProjectionCard(photoPath = photoPath, horizon = potential.horizonWeeks, week = week, onWeek = onWeek)
+        }
+    }
     Spacer(Modifier.height(spacing.md))
-    FadeInUp(delayMillis = motion.stagger(2)) {
+    FadeInUp(delayMillis = motion.stagger(3)) {
         SkinthesiaCard {
             PotentialChart(potential = potential, week = week, onWeek = onWeek)
             Spacer(Modifier.height(4.dp))
@@ -344,6 +362,96 @@ private fun PotentialChart(potential: PotentialState, week: Int, onWeek: (Int) -
             drawText(layout, topLeft = Offset(lx, top + ch + 8.dp.toPx()))
         }
     }
+}
+
+/**
+ * The 12-week illustrative projection: the user's own Week 1 photo, with a
+ * purely visual brighten/saturation lift that grows with the selected week.
+ * This is presentation over the SAME real image, never a generated photo, and
+ * is labelled as such - it must never read as a scientific prediction.
+ */
+@Composable
+private fun VisualProjectionCard(photoPath: String, horizon: Int, week: Int, onWeek: (Int) -> Unit) {
+    val colors = SkinthesiaTheme.colors
+    val typography = SkinthesiaTheme.typography
+    val t = week.coerceIn(0, horizon).toFloat() / horizon.coerceAtLeast(1)
+    val animatedT by animateFloatAsState(t, tween(260), label = "projectionT")
+    SkinthesiaCard {
+        SectionOverline(text = "Your skin journey")
+        Spacer(Modifier.height(10.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(260.dp)
+                .clip(SkinthesiaTheme.shapes.image)
+                .background(colors.surfaceMuted),
+        ) {
+            SkinthesiaImage(
+                source = ImageSource.LocalFile(photoPath),
+                contentDescription = if (week == 0) "Your Day 1 photo" else "Illustrative projection at week $week",
+                modifier = Modifier.fillMaxSize(),
+                maxDimension = 900,
+                colorFilter = ColorFilter.colorMatrix(projectionMatrix(animatedT)),
+            )
+            if (week > 0) {
+                Tag(
+                    text = "Illustrative projection",
+                    tone = TagTone.GOLD,
+                    dot = true,
+                    modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .background(Brush.verticalGradient(listOf(Color.Transparent, colors.scrim)))
+                    .padding(12.dp),
+            ) {
+                Text(
+                    text = if (week == 0) "Day 1 · your actual photo" else "Week $week · a visual simulation, not a guaranteed outcome",
+                    style = typography.caption,
+                    color = colors.textOnPhoto,
+                )
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            PROJECTION_WEEKS.filter { it <= horizon }.distinct().forEach { w ->
+                ProjectionWeekChip(week = w, selected = week == w, onClick = { onWeek(w) })
+            }
+        }
+    }
+}
+
+private val PROJECTION_WEEKS = listOf(0, 2, 4, 8, 12)
+
+@Composable
+private fun ProjectionWeekChip(week: Int, selected: Boolean, onClick: () -> Unit) {
+    val colors = SkinthesiaTheme.colors
+    val typography = SkinthesiaTheme.typography
+    Box(
+        modifier = Modifier
+            .clip(SkinthesiaTheme.shapes.pill)
+            .background(if (selected) colors.primary else colors.surfaceMuted)
+            .clickable(role = Role.Button, onClickLabel = if (week == 0) "Week 1" else "Week $week", onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+    ) {
+        Text(
+            text = if (week == 0) "W1" else "W$week",
+            style = typography.labelSmall,
+            color = if (selected) colors.textOnPrimary else colors.textSecondary,
+        )
+    }
+}
+
+/** A subtle brighten + saturation lift as [t] (0..1) grows - a visual simulation over the SAME real photo, never a generated one. */
+private fun projectionMatrix(t: Float): ColorMatrix {
+    val matrix = ColorMatrix().apply { setToSaturation(1f + 0.16f * t) }
+    matrix.values[4] += 8f * t
+    matrix.values[9] += 6f * t
+    matrix.values[14] += 3f * t
+    return matrix
 }
 
 @Composable
