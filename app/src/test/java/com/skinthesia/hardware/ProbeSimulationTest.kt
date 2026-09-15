@@ -53,7 +53,10 @@ class ProbeSimulationTest {
         val events = probe.measure(MeasurementRegion.FOREHEAD, Fixtures.session(), week = 0).toList()
         assertTrue(events.first() is RegionMeasurementEvent.Progress)
         val completed = events.last() as RegionMeasurementEvent.Completed
-        assertEquals(setOf(SensorType.PH, SensorType.HYDRATION, SensorType.TEMPERATURE), completed.readings.map { it.sensor }.toSet())
+        assertEquals(
+            setOf(SensorType.PH, SensorType.HYDRATION, SensorType.TEMPERATURE, SensorType.SEBUM, SensorType.SKIN_BARRIER),
+            completed.readings.map { it.sensor }.toSet(),
+        )
         assertTrue(completed.readings.all { it.source == DataSource.SENSOR_SIMULATED && it.region == MeasurementRegion.FOREHEAD })
         assertTrue(completed.readings.all { it.sessionId == "ses-1" && it.userId == "user-test" })
     }

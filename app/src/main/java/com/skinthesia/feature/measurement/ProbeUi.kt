@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.skinthesia.core.design.SkinthesiaTheme
@@ -43,12 +44,26 @@ val SensorType.icon: ImageVector
         SensorType.PH -> SkinthesiaIcons.Balance
         SensorType.HYDRATION -> SkinthesiaIcons.Droplet
         SensorType.TEMPERATURE -> SkinthesiaIcons.Thermometer
+        SensorType.SEBUM -> SkinthesiaIcons.Glow
+        SensorType.SKIN_BARRIER -> SkinthesiaIcons.Shield
+    }
+
+/** Short enough to sit under a value in a narrow tile, even with all five sensors shown at once. */
+val SensorType.shortLabel: String
+    get() = when (this) {
+        SensorType.PH -> "pH"
+        SensorType.HYDRATION -> "Hydration"
+        SensorType.TEMPERATURE -> "Temp"
+        SensorType.SEBUM -> "Sebum"
+        SensorType.SKIN_BARRIER -> "Barrier"
     }
 
 fun SensorType.format(value: Double): String = when (this) {
     SensorType.PH -> fmt(value, 1)
     SensorType.HYDRATION -> fmt(value, 0)
     SensorType.TEMPERATURE -> fmt(value, 1) + "°C"
+    SensorType.SEBUM -> fmt(value, 0)
+    SensorType.SKIN_BARRIER -> fmt(value, 0)
 }
 
 val SensorType.caption: String
@@ -56,6 +71,8 @@ val SensorType.caption: String
         SensorType.PH -> "Surface pH"
         SensorType.HYDRATION -> "Hydration index"
         SensorType.TEMPERATURE -> "Skin temperature"
+        SensorType.SEBUM -> "Oil production index"
+        SensorType.SKIN_BARRIER -> "Barrier strength index"
     }
 
 /** Four quiet bars for received signal strength. */
@@ -143,7 +160,7 @@ fun SensorTile(sensor: SensorType, value: Double?, modifier: Modifier = Modifier
         Spacer(Modifier.height(8.dp))
         Text(text = value?.let { sensor.format(it) } ?: "—", style = typography.metric, color = colors.textPrimary)
         Spacer(Modifier.height(2.dp))
-        Text(text = sensor.label, style = typography.caption, color = colors.textMuted)
+        Text(text = sensor.shortLabel, style = typography.caption, color = colors.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

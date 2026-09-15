@@ -28,12 +28,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
+import com.skinthesia.R
 import com.skinthesia.ai.progress.JourneyClock
 import com.skinthesia.core.design.SkinthesiaTheme
 import com.skinthesia.core.navigation.AreaDetailRoute
@@ -52,6 +55,7 @@ import com.skinthesia.core.ui.art.FaceDiagram
 import com.skinthesia.core.ui.art.ProbeIllustration
 import com.skinthesia.core.ui.art.ProbeVisualState
 import com.skinthesia.core.ui.components.BrandMonogram
+import com.skinthesia.core.ui.components.BrandWordmark
 import com.skinthesia.core.ui.components.DeltaBadge
 import com.skinthesia.core.ui.components.EmptyState
 import com.skinthesia.core.ui.components.FadeInUp
@@ -74,6 +78,7 @@ import com.skinthesia.domain.model.AssessmentKind
 import com.skinthesia.domain.model.ImageSource
 import com.skinthesia.domain.model.LearningArticle
 import com.skinthesia.domain.model.PersonalizedPlan
+import com.skinthesia.domain.model.ProbeState
 import com.skinthesia.domain.model.RoutineTime
 import com.skinthesia.domain.model.SkinPrint
 import com.skinthesia.domain.model.UserProfile
@@ -88,6 +93,7 @@ import com.skinthesia.feature.analysis.LevelBar
 import com.skinthesia.feature.plan.FocusAreaRow
 import com.skinthesia.feature.plan.InsightCard
 import com.skinthesia.feature.plan.icon
+import com.skinthesia.hardware.probe.SkinProbeManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -113,6 +119,7 @@ data class HomeUiState(
     val demoTimeline: Boolean = true,
     val article: LearningArticle? = null,
     val pairedDeviceId: String? = null,
+    val probe: ProbeState = ProbeState.Idle,
 )
 
 class HomeViewModel(
@@ -122,6 +129,7 @@ class HomeViewModel(
     learning: LearningRepository,
     settings: SettingsRepository,
     private val journeyClock: JourneyClock,
+    probe: SkinProbeManager,
 ) : ViewModel() {
 
     val today: LocalDate = LocalDate.now()
@@ -141,8 +149,8 @@ class HomeViewModel(
         plans.currentPlan,
         plans.logsOn(today),
         learning.articles,
-        combine(profile, settings.settings) { p, s -> p to s },
-    ) { completed, plan, logs, articles, (p, s) ->
+        combine(profile, settings.settings, probe.state) { p, s, probeState -> Triple(p, s, probeState) },
+    ) { completed, plan, logs, articles, (p, s, probeState) ->
         val baseline = completed.firstOrNull { it.kind == AssessmentKind.BASELINE }
         val latest = completed.lastOrNull { it.skinPrint != null }
         val done = logs.map { it.stepId }.toSet()
@@ -168,6 +176,7 @@ class HomeViewModel(
             article = articles.filter { a -> a.relevantGoals.any { it in goals } }.sortedByDescending { it.featured }.firstOrNull()
                 ?: articles.firstOrNull(),
             pairedDeviceId = p.pairedDeviceId,
+            probe = probeState,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 }
@@ -182,7 +191,7 @@ private fun greeting(): String = when (LocalTime.now().hour) {
 @Composable
 fun HomeScreen(onSelectTab: (Int) -> Unit) {
     val navigator = LocalAppNavigator.current
-    val viewModel = containerViewModel { HomeViewModel(profiles, assessments, plans, learning, settings, journeyClock) }
+    val viewModel = containerViewModel { HomeViewModel(profiles, assessments, plans, learning, settings, journeyClock, probeManager) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val colors = SkinthesiaTheme.colors
     val typography = SkinthesiaTheme.typography
@@ -196,6 +205,12 @@ fun HomeScreen(onSelectTab: (Int) -> Unit) {
             return@SkinthesiaScreen
         }
         Spacer(Modifier.height(spacing.md))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            BrandMonogram(size = 26.dp)
+            Spacer(Modifier.width(8.dp))
+            BrandWordmark(height = 17.dp)
+        }
+        Spacer(Modifier.height(spacing.lg))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(text = greeting() + ",", style = typography.subtitle, color = colors.textSecondary)
@@ -212,10 +227,20 @@ fun HomeScreen(onSelectTab: (Int) -> Unit) {
                 Text(text = state.firstName.take(1).uppercase().ifBlank { "S" }, style = typography.titleSmall, color = colors.primary)
             }
         }
-        Spacer(Modifier.height(6.dp))
-        SectionOverline(
-            text = (if (state.currentWeek == 0) "Week 1" else "Week ${state.currentWeek}") + " of ${state.programmeWeeks} · " + viewModel.today.formatWeekday(),
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "“" + stringResource(R.string.brand_tagline).lowercase().replaceFirstChar { it.uppercase() } + "”",
+            style = typography.articleLead.copy(fontSize = 15.sp, lineHeight = 20.sp),
+            color = colors.textSecondary,
         )
+        Spacer(Modifier.height(10.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(SkinthesiaIcons.Calendar, contentDescription = null, tint = colors.textMuted, modifier = Modifier.size(13.dp))
+            Spacer(Modifier.width(6.dp))
+            SectionOverline(
+                text = (if (state.currentWeek == 0) "Week 1" else "Week ${state.currentWeek}") + " of ${state.programmeWeeks} · " + viewModel.today.formatWeekday(),
+            )
+        }
         Spacer(Modifier.height(spacing.lg))
 
         val latest = state.latest
@@ -272,7 +297,8 @@ fun HomeScreen(onSelectTab: (Int) -> Unit) {
         Spacer(Modifier.height(spacing.lg))
         FadeInUp(delayMillis = motion.stagger(2)) {
             ProbeCtaCard(
-                paired = state.pairedDeviceId != null,
+                probe = state.probe,
+                remembered = state.pairedDeviceId != null,
                 onClick = { navigator.navigate(CheckInIntroRoute) },
             )
         }
@@ -439,15 +465,36 @@ private fun LatestAnalysisCard(assessment: Assessment, insight: String?, onOpen:
     }
 }
 
+/** CTA title, subtitle, illustration state and pulse - one place mapping the real shared [ProbeState] to Home's copy. */
+private data class ProbeCtaCopy(val title: String, val subtitle: String, val visual: ProbeVisualState)
+
+private fun probeCtaCopy(probe: ProbeState, remembered: Boolean): ProbeCtaCopy = when (probe) {
+    is ProbeState.Idle -> ProbeCtaCopy(
+        title = "Connect Probe",
+        subtitle = if (remembered) "Paired · connects when you measure" else "Hydration, sebum, pH, barrier and temperature, straight from your skin.",
+        visual = ProbeVisualState.IDLE,
+    )
+    is ProbeState.Scanning -> ProbeCtaCopy("Connecting…", "Searching for your probe…", ProbeVisualState.SEARCHING)
+    is ProbeState.Connecting -> ProbeCtaCopy("Connecting…", "Pairing with ${probe.device.name}…", ProbeVisualState.SEARCHING)
+    is ProbeState.Connected -> ProbeCtaCopy("Probe Connected", "Calibrating next.", ProbeVisualState.CONNECTED)
+    is ProbeState.Calibrating -> ProbeCtaCopy("Calibrating…", "Hold the probe still for a moment.", ProbeVisualState.CONNECTED)
+    is ProbeState.Ready -> ProbeCtaCopy("Ready to Measure", "Your probe is ready whenever you are.", ProbeVisualState.CONNECTED)
+    is ProbeState.Failed -> ProbeCtaCopy("Connect Probe", "Connection didn't complete - tap to try again.", ProbeVisualState.IDLE)
+}
+
 /**
  * The probe is a real differentiator, not just another card - a compact hero
- * with the actual product photo. Tapping it reuses the existing check-in entry
- * point (the same destination as "Start Check-in" below), never a new flow.
+ * with the actual product photo, its title reflecting the real shared probe
+ * connection state (the same [ProbeState] the Analyze/Connect/Calibration
+ * screens observe) rather than a static paired/unpaired flag. Tapping it
+ * reuses the existing check-in entry point (the same destination as "Start
+ * Check-in" below), never a new flow.
  */
 @Composable
-private fun ProbeCtaCard(paired: Boolean, onClick: () -> Unit) {
+private fun ProbeCtaCard(probe: ProbeState, remembered: Boolean, onClick: () -> Unit) {
     val colors = SkinthesiaTheme.colors
     val typography = SkinthesiaTheme.typography
+    val copy = probeCtaCopy(probe, remembered)
     SkinthesiaCard(onClick = onClick) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -455,21 +502,17 @@ private fun ProbeCtaCard(paired: Boolean, onClick: () -> Unit) {
                 Spacer(Modifier.height(6.dp))
                 Text(text = "Measure beyond the camera.", style = typography.titleSmall, color = colors.textPrimary)
                 Spacer(Modifier.height(4.dp))
-                Text(
-                    text = if (paired) "Paired · connects when you measure" else "Hydration, pH and temperature, straight from your skin.",
-                    style = typography.bodySmall,
-                    color = colors.textSecondary,
-                )
+                Text(text = copy.subtitle, style = typography.bodySmall, color = colors.textSecondary)
                 Spacer(Modifier.height(12.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = if (paired) "Take a reading" else "Connect Probe", style = typography.label, color = colors.primary)
+                    Text(text = copy.title, style = typography.label, color = colors.primary)
                     Spacer(Modifier.width(4.dp))
                     Icon(SkinthesiaIcons.ChevronRight, contentDescription = null, tint = colors.primary, modifier = Modifier.size(14.dp))
                 }
             }
             Spacer(Modifier.width(8.dp))
             ProbeIllustration(
-                state = if (paired) ProbeVisualState.CONNECTED else ProbeVisualState.IDLE,
+                state = copy.visual,
                 modifier = Modifier.width(52.dp).height(110.dp),
             )
         }

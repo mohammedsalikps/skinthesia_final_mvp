@@ -100,6 +100,8 @@ private fun noteFor(readout: SensorReadout): String = when (readout.sensor) {
         "A relative index: higher suggests better-hydrated skin.$comparison"
     }
     SensorType.TEMPERATURE -> "Recorded alongside the other readings as context."
+    SensorType.SEBUM -> "A relative index: higher suggests more oil at the surface. The T-zone often reads higher than the cheeks."
+    SensorType.SKIN_BARRIER -> "A relative index: higher suggests a stronger, more resilient skin barrier."
 }
 
 /** Screen 18: probe readings per sensor and region, labelled as simulated when they are. */

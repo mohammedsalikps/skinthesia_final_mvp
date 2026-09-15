@@ -9,6 +9,10 @@ enum class ProductCategory(val label: String, val plural: String) {
     MOISTURIZER("Moisturizer", "Moisturizers"),
     SUNSCREEN("Sunscreen", "Sunscreens"),
     TREATMENT("Treatment", "Treatments"),
+    /** The Skinthesia hardware itself - not a topical product; see [ProductVisual]. */
+    PRO("Pro", "Pro"),
+    FACE_MASK("Face Mask", "Face Masks"),
+    HAND_GLOVES("Hand Gloves", "Hand Gloves"),
 }
 
 /** Packaging shape, used to draw the product artwork. */

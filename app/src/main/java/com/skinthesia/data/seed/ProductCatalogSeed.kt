@@ -781,5 +781,164 @@ object ProductCatalogSeed {
             rating = 4.3f,
             reviewCount = 350,
         ),
+
+        // ---------------------------------------------------------------- Skinthesia Pro
+
+        Product(
+            id = "prd-skinthesia-pro",
+            name = "Skinthesia Pro",
+            brand = HOUSE,
+            category = ProductCategory.PRO,
+            // form/tone are unused for PRO - ProductVisual renders the real probe photo instead.
+            form = ProductForm.BOTTLE,
+            tone = ProductTone.CLAY,
+            size = "1 device",
+            price = 12900,
+            description = "The Skinthesia Probe pairs with the app over Bluetooth to add pH, hydration, sebum, " +
+                "skin barrier and temperature readings to every SkinPrint - measurements a camera alone can't take.",
+            howToUse = "Rest the probe gently on clean, dry skin and hold still for a few seconds while it reads. " +
+                "Pair it from the Analyze tab, then measure your forehead and both cheeks as part of any check-in.",
+            keyIngredients = emptyList(),
+            fullIngredients = "Bluetooth Low Energy device. Sensors: pH, hydration, sebum, skin barrier, skin temperature. " +
+                "USB-C rechargeable.",
+            supportsGoals = emptySet(),
+            skinTypes = emptySet(),
+            attributes = emptySet(),
+            routineTimes = emptySet(),
+            rating = 4.8f,
+            reviewCount = 640,
+        ),
+
+        // ---------------------------------------------------------------- Face masks
+
+        Product(
+            id = "prd-kaolin-clarity-mask",
+            name = "Kaolin Clarity Mask",
+            brand = MONSOON,
+            category = ProductCategory.FACE_MASK,
+            form = ProductForm.JAR,
+            tone = ProductTone.SAGE,
+            size = "75 g",
+            price = 890,
+            description = "A fine kaolin clay mask that draws out excess oil without over-drying. " +
+                "Pores look tighter and skin looks fresher after a single ten-minute mask.",
+            howToUse = "Apply an even layer to clean, dry skin, avoiding the eye area, and leave for ten minutes. " +
+                "Rinse with lukewarm water. Use once or twice a week.",
+            keyIngredients = listOf(
+                Ingredient(name = "Kaolin clay", role = "Draws out excess oil and surface impurities"),
+                Ingredient(name = "Zinc PCA", role = "Helps skin look less shiny afterward"),
+                Ingredient(name = "Glycerin", role = "Keeps the clay from over-drying skin"),
+            ),
+            fullIngredients = "Aqua, Kaolin, Glycerin, Zinc PCA, Bentonite, Camellia Sinensis Leaf Extract, " +
+                "Xanthan Gum, Sodium Benzoate, Potassium Sorbate",
+            supportsGoals = setOf(SkinGoal.PORES, SkinGoal.ACNE),
+            skinTypes = setOf(SkinType.OILY, SkinType.COMBINATION, SkinType.NORMAL),
+            attributes = setOf(
+                ProductAttribute.FRAGRANCE_FREE,
+                ProductAttribute.VEGAN,
+                ProductAttribute.CRUELTY_FREE,
+            ),
+            routineTimes = EVENING_ONLY,
+            rating = 4.5f,
+            reviewCount = 590,
+        ),
+
+        Product(
+            id = "prd-hydra-veil-sheet-mask",
+            name = "Hydra Veil Sheet Mask",
+            brand = HALCYON,
+            category = ProductCategory.FACE_MASK,
+            form = ProductForm.TUBE,
+            tone = ProductTone.MIST,
+            size = "Single use",
+            price = 220,
+            description = "A soaked sheet mask in a cooling hyaluronic acid essence, for a quick boost of hydration " +
+                "before a big day or after a long one.",
+            howToUse = "Unfold over clean skin, smooth out air bubbles, and leave for fifteen minutes. " +
+                "Pat any remaining essence in - no need to rinse.",
+            keyIngredients = listOf(
+                Ingredient(name = "Hyaluronic acid, multi-weight", role = "Draws in and holds water at the surface"),
+                Ingredient(name = "Panthenol", role = "Helps skin feel soft and comfortable"),
+                Ingredient(name = "Centella asiatica extract", role = "Helps skin feel soothed"),
+            ),
+            fullIngredients = "Aqua, Glycerin, Butylene Glycol, Sodium Hyaluronate, Panthenol, " +
+                "Centella Asiatica Extract, Allantoin, Xanthan Gum, Phenoxyethanol, Ethylhexylglycerin",
+            supportsGoals = setOf(SkinGoal.HYDRATION, SkinGoal.OVERALL_HEALTH),
+            skinTypes = setOf(SkinType.DRY, SkinType.NORMAL, SkinType.SENSITIVE, SkinType.COMBINATION),
+            attributes = setOf(
+                ProductAttribute.FRAGRANCE_FREE,
+                ProductAttribute.GENTLE,
+                ProductAttribute.CRUELTY_FREE,
+            ),
+            routineTimes = BOTH,
+            rating = 4.6f,
+            reviewCount = 1040,
+        ),
+
+        // ---------------------------------------------------------------- Hand gloves
+
+        Product(
+            id = "prd-hydro-gel-moisture-gloves",
+            name = "Hydro Gel Moisture Gloves",
+            brand = MONSOON,
+            category = ProductCategory.HAND_GLOVES,
+            form = ProductForm.TUBE,
+            tone = ProductTone.BLUSH,
+            size = "1 pair",
+            price = 650,
+            description = "Reusable gel-lined gloves infused with shea butter and glycerin for a spa-style hand " +
+                "treatment. Skin feels noticeably softer after just fifteen minutes.",
+            howToUse = "Slip clean, dry hands into the gloves and leave for fifteen to twenty minutes. " +
+                "Remove, massage in any excess, and rinse the gloves for reuse.",
+            keyIngredients = listOf(
+                Ingredient(name = "Shea butter", role = "A rich emollient that helps dry hands feel comfortable"),
+                Ingredient(name = "Glycerin", role = "Draws water into the upper layers of skin"),
+                Ingredient(name = "Squalane", role = "Keeps skin soft and helps prevent moisture loss"),
+            ),
+            fullIngredients = "Aqua, Glycerin, Butyrospermum Parkii Butter, Squalane, Cetearyl Alcohol, " +
+                "Panthenol, Xanthan Gum, Phenoxyethanol, Ethylhexylglycerin",
+            supportsGoals = setOf(SkinGoal.HYDRATION, SkinGoal.TEXTURE),
+            skinTypes = setOf(SkinType.DRY, SkinType.NORMAL, SkinType.SENSITIVE),
+            attributes = setOf(
+                ProductAttribute.FRAGRANCE_FREE,
+                ProductAttribute.VEGAN,
+                ProductAttribute.CRUELTY_FREE,
+            ),
+            routineTimes = EVENING_ONLY,
+            rating = 4.4f,
+            reviewCount = 310,
+        ),
+
+        Product(
+            id = "prd-overnight-repair-gloves",
+            name = "Overnight Repair Gloves",
+            brand = KERNE,
+            category = ProductCategory.HAND_GLOVES,
+            form = ProductForm.BOTTLE,
+            tone = ProductTone.SAND,
+            size = "3 pairs",
+            price = 780,
+            description = "Soft cotton gloves paired with a ceramide-rich hand cream, worn overnight to help dry, " +
+                "tired hands feel repaired by morning.",
+            howToUse = "Massage the cream generously into hands before bed, then wear the cotton gloves overnight. " +
+                "Use two or three nights a week, or as needed.",
+            keyIngredients = listOf(
+                Ingredient(name = "Ceramide complex", role = "Helps support the skin barrier overnight"),
+                Ingredient(name = "Shea butter", role = "A rich emollient for dry, worked hands"),
+                Ingredient(name = "Panthenol", role = "Helps skin feel calm and comfortable"),
+            ),
+            fullIngredients = "Aqua, Glycerin, Butyrospermum Parkii Butter, Cetearyl Alcohol, Ceramide NP, " +
+                "Panthenol, Dimethicone, Carbomer, Phenoxyethanol, Ethylhexylglycerin",
+            supportsGoals = setOf(SkinGoal.HYDRATION, SkinGoal.OVERALL_HEALTH),
+            skinTypes = setOf(SkinType.DRY, SkinType.SENSITIVE, SkinType.NORMAL),
+            attributes = setOf(
+                ProductAttribute.FRAGRANCE_FREE,
+                ProductAttribute.RICH,
+                ProductAttribute.CRUELTY_FREE,
+            ),
+            routineTimes = EVENING_ONLY,
+            rating = 4.5f,
+            reviewCount = 260,
+        ),
     )
 }

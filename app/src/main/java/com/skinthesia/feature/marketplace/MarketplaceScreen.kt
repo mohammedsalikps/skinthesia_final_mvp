@@ -2,6 +2,7 @@ package com.skinthesia.feature.marketplace
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -23,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -36,7 +38,7 @@ import com.skinthesia.core.navigation.MarketplaceRoute
 import com.skinthesia.core.navigation.OrdersRoute
 import com.skinthesia.core.navigation.ProductDetailRoute
 import com.skinthesia.core.navigation.containerViewModel
-import com.skinthesia.core.ui.art.ProductArtwork
+import com.skinthesia.core.ui.art.ProductVisual
 import com.skinthesia.core.ui.components.EmptyState
 import com.skinthesia.core.ui.components.FadeInUp
 import com.skinthesia.core.ui.components.IconAction
@@ -46,6 +48,7 @@ import com.skinthesia.core.ui.components.ScreenHeader
 import com.skinthesia.core.ui.components.ScrollableFilterTabs
 import com.skinthesia.core.ui.components.SearchField
 import com.skinthesia.core.ui.components.SectionHeader
+import com.skinthesia.core.ui.components.SectionOverline
 import com.skinthesia.core.ui.components.SkinthesiaCard
 import com.skinthesia.core.ui.components.SkinthesiaScreen
 import com.skinthesia.core.ui.components.SkinthesiaTopBar
@@ -159,7 +162,12 @@ fun MarketplaceScreen() {
         if (shown.isEmpty()) {
             EmptyState(icon = SkinthesiaIcons.Search, title = "Nothing matches", body = "Try another word, ingredient or category.")
         }
-        shown.chunked(2).forEachIndexed { index, row ->
+        val (proProducts, regularProducts) = shown.partition { it.category == ProductCategory.PRO }
+        proProducts.forEach { product ->
+            FadeInUp { ProHeroTile(product) { navigator.navigate(ProductDetailRoute(product.id)) } }
+            Spacer(Modifier.height(12.dp))
+        }
+        regularProducts.chunked(2).forEachIndexed { index, row ->
             FadeInUp(delayMillis = SkinthesiaTheme.motion.stagger(index.coerceAtMost(3))) {
                 Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     row.forEach { product ->
@@ -180,11 +188,9 @@ fun ProductTile(product: Product, modifier: Modifier = Modifier, onClick: () -> 
     val colors = SkinthesiaTheme.colors
     val typography = SkinthesiaTheme.typography
     SkinthesiaCard(modifier = modifier, onClick = onClick, contentPadding = PaddingValues(12.dp)) {
-        ProductArtwork(
-            form = product.form,
-            tone = product.tone,
+        ProductVisual(
+            product = product,
             modifier = Modifier.fillMaxWidth().height(128.dp).clip(SkinthesiaTheme.shapes.tile),
-            mark = product.brand.take(1).uppercase(),
             contentDescription = null,
         )
         Spacer(Modifier.height(10.dp))
@@ -205,16 +211,47 @@ private fun RecommendedTile(product: Product, match: Int, onClick: () -> Unit) {
     val colors = SkinthesiaTheme.colors
     val typography = SkinthesiaTheme.typography
     SkinthesiaCard(modifier = Modifier.width(156.dp), onClick = onClick, contentPadding = PaddingValues(12.dp)) {
-        ProductArtwork(
-            form = product.form,
-            tone = product.tone,
+        ProductVisual(
+            product = product,
             modifier = Modifier.fillMaxWidth().height(104.dp).clip(SkinthesiaTheme.shapes.tile),
-            mark = product.brand.take(1).uppercase(),
             contentDescription = null,
         )
         Spacer(Modifier.height(10.dp))
         Text(text = product.name, style = typography.label, color = colors.textPrimary, maxLines = 2, minLines = 2, overflow = TextOverflow.Ellipsis)
         Spacer(Modifier.height(6.dp))
         Tag(text = "$match% match", tone = TagTone.SAGE)
+    }
+}
+
+/**
+ * Skinthesia Pro is hardware, not a topical product - a full-width hero rather
+ * than a grid tile, using the app's own probe photo via [ProductVisual].
+ */
+@Composable
+private fun ProHeroTile(product: Product, onClick: () -> Unit) {
+    val colors = SkinthesiaTheme.colors
+    val typography = SkinthesiaTheme.typography
+    SkinthesiaCard(onClick = onClick, containerColor = colors.primary, borderColor = Color.Transparent) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                SectionOverline(text = "Skinthesia Pro", color = colors.textOnPrimary.copy(alpha = 0.75f))
+                Spacer(Modifier.height(6.dp))
+                Text(text = "AI Skin Intelligence Device", style = typography.titleSmall, color = colors.textOnPrimary)
+                Spacer(Modifier.height(6.dp))
+                Text(text = "Measure. Understand. Improve.", style = typography.bodySmall, color = colors.textOnPrimary.copy(alpha = 0.88f))
+                Spacer(Modifier.height(12.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "View Product", style = typography.label, color = colors.textOnPrimary)
+                    Spacer(Modifier.width(4.dp))
+                    Icon(SkinthesiaIcons.ChevronRight, contentDescription = null, tint = colors.textOnPrimary, modifier = Modifier.size(14.dp))
+                }
+            }
+            Spacer(Modifier.width(8.dp))
+            ProductVisual(
+                product = product,
+                modifier = Modifier.width(72.dp).height(150.dp),
+                contentDescription = product.name,
+            )
+        }
     }
 }

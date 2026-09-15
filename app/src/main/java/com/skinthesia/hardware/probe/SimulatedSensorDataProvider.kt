@@ -11,7 +11,7 @@ import kotlin.math.roundToInt
 import kotlin.random.Random
 
 /**
- * Development sensor simulator. Values sit in plausible ranges for the three
+ * Development sensor simulator. Values sit in plausible ranges for the five
  * development sensors named in the brief and settle over a few seconds, like a probe
  * resting on skin. Output is deterministic for a session, and hydration drifts gently
  * upward with the programme week so check-ins show believable, labelled change.
@@ -59,16 +59,23 @@ class SimulatedSensorDataProvider(
                 SensorType.PH to 5.15 + r.nextDouble() * 0.25 - context.week * 0.004,
                 SensorType.HYDRATION to 60.0 + r.nextDouble() * 6 + weekLift * 0.7,
                 SensorType.TEMPERATURE to 32.7 + r.nextDouble() * 0.6,
+                // The T-zone runs oilier than the cheeks; sebum eases slightly as a routine settles in.
+                SensorType.SEBUM to 58.0 + r.nextDouble() * 10 - context.week * 0.3,
+                SensorType.SKIN_BARRIER to 62.0 + r.nextDouble() * 6 + weekLift * 0.5,
             )
             MeasurementRegion.LEFT_CHEEK -> mapOf(
                 SensorType.PH to 5.40 + r.nextDouble() * 0.25 - context.week * 0.006,
                 SensorType.HYDRATION to 50.0 + r.nextDouble() * 7 + weekLift,
                 SensorType.TEMPERATURE to 32.1 + r.nextDouble() * 0.5,
+                SensorType.SEBUM to 36.0 + r.nextDouble() * 8 - context.week * 0.15,
+                SensorType.SKIN_BARRIER to 58.0 + r.nextDouble() * 7 + weekLift * 0.6,
             )
             MeasurementRegion.RIGHT_CHEEK -> mapOf(
                 SensorType.PH to 5.38 + r.nextDouble() * 0.25 - context.week * 0.006,
                 SensorType.HYDRATION to 52.0 + r.nextDouble() * 7 + weekLift,
                 SensorType.TEMPERATURE to 32.0 + r.nextDouble() * 0.5,
+                SensorType.SEBUM to 38.0 + r.nextDouble() * 8 - context.week * 0.15,
+                SensorType.SKIN_BARRIER to 58.0 + r.nextDouble() * 7 + weekLift * 0.6,
             )
         }.mapValues { (sensor, value) -> round(sensor, value.coerceIn(range(sensor))) }
     }
@@ -77,18 +84,24 @@ class SimulatedSensorDataProvider(
         SensorType.PH -> 6.4
         SensorType.HYDRATION -> 18.0
         SensorType.TEMPERATURE -> 29.4
+        SensorType.SEBUM -> 20.0
+        SensorType.SKIN_BARRIER -> 25.0
     }
 
     private fun jitterScale(sensor: SensorType): Double = when (sensor) {
         SensorType.PH -> 0.5
         SensorType.HYDRATION -> 9.0
         SensorType.TEMPERATURE -> 0.8
+        SensorType.SEBUM -> 7.0
+        SensorType.SKIN_BARRIER -> 6.0
     }
 
     private fun range(sensor: SensorType): ClosedFloatingPointRange<Double> = when (sensor) {
         SensorType.PH -> 4.5..6.5
         SensorType.HYDRATION -> 20.0..90.0
         SensorType.TEMPERATURE -> 30.0..35.0
+        SensorType.SEBUM -> 0.0..100.0
+        SensorType.SKIN_BARRIER -> 0.0..100.0
     }
 
     private fun round(sensor: SensorType, value: Double): Double {

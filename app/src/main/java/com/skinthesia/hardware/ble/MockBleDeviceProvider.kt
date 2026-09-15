@@ -50,7 +50,13 @@ class MockBleDeviceProvider(
     }
 
     companion object {
-        private val DEVELOPMENT_SENSORS = setOf(SensorType.PH, SensorType.HYDRATION, SensorType.TEMPERATURE)
+        private val DEVELOPMENT_SENSORS = setOf(
+            SensorType.PH,
+            SensorType.HYDRATION,
+            SensorType.TEMPERATURE,
+            SensorType.SEBUM,
+            SensorType.SKIN_BARRIER,
+        )
 
         val PRIMARY = ProbeDevice(
             id = "SIM-01A3",

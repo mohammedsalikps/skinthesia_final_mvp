@@ -40,7 +40,7 @@ import com.skinthesia.core.navigation.CartRoute
 import com.skinthesia.core.navigation.LocalAppNavigator
 import com.skinthesia.core.navigation.ProductDetailRoute
 import com.skinthesia.core.navigation.containerViewModel
-import com.skinthesia.core.ui.art.ProductArtwork
+import com.skinthesia.core.ui.art.ProductVisual
 import com.skinthesia.core.ui.components.FadeInUp
 import com.skinthesia.core.ui.components.IconAction
 import com.skinthesia.core.ui.components.InfoNotice
@@ -60,6 +60,7 @@ import com.skinthesia.core.ui.components.TagTone
 import com.skinthesia.core.ui.formatPrice
 import com.skinthesia.core.ui.icons.SkinthesiaIcons
 import com.skinthesia.domain.model.Product
+import com.skinthesia.domain.model.ProductCategory
 import com.skinthesia.domain.model.ProductRecommendation
 import com.skinthesia.domain.model.SkinType
 import com.skinthesia.domain.repository.CartRepository
@@ -187,11 +188,9 @@ fun ProductDetailScreen() {
                             .clip(SkinthesiaTheme.shapes.card)
                             .background(colors.surfaceMuted),
                     ) {
-                        ProductArtwork(
-                            form = product.form,
-                            tone = product.tone,
+                        ProductVisual(
+                            product = product,
                             modifier = Modifier.fillMaxSize(),
-                            mark = product.brand.take(1).uppercase(),
                             contentDescription = product.name,
                         )
                     }
@@ -268,36 +267,45 @@ fun ProductDetailScreen() {
                 Spacer(Modifier.height(8.dp))
                 Text(text = product.howToUse, style = typography.body, color = colors.textSecondary)
 
-                Spacer(Modifier.height(spacing.lg))
-                SkinthesiaCard {
-                    SectionOverline(text = "Suits")
-                    Spacer(Modifier.height(6.dp))
-                    Text(text = product.skinTypes.joinToString(", ") { it.label }, style = typography.body, color = colors.textPrimary)
-                    if (product.supportsGoals.isNotEmpty()) {
-                        Spacer(Modifier.height(12.dp))
-                        SectionOverline(text = "Helps with")
+                if (product.category != ProductCategory.PRO) {
+                    Spacer(Modifier.height(spacing.lg))
+                    SkinthesiaCard {
+                        SectionOverline(text = "Suits")
                         Spacer(Modifier.height(6.dp))
-                        Text(text = product.supportsGoals.joinToString(", ") { it.label }, style = typography.body, color = colors.textPrimary)
+                        Text(text = product.skinTypes.joinToString(", ") { it.label }, style = typography.body, color = colors.textPrimary)
+                        if (product.supportsGoals.isNotEmpty()) {
+                            Spacer(Modifier.height(12.dp))
+                            SectionOverline(text = "Helps with")
+                            Spacer(Modifier.height(6.dp))
+                            Text(text = product.supportsGoals.joinToString(", ") { it.label }, style = typography.body, color = colors.textPrimary)
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        SectionOverline(text = "Use")
+                        Spacer(Modifier.height(6.dp))
+                        Text(text = product.routineTimes.joinToString(" and ") { it.label.lowercase() }.replaceFirstChar { it.uppercase() }, style = typography.body, color = colors.textPrimary)
                     }
-                    Spacer(Modifier.height(12.dp))
-                    SectionOverline(text = "Use")
-                    Spacer(Modifier.height(6.dp))
-                    Text(text = product.routineTimes.joinToString(" and ") { it.label.lowercase() }.replaceFirstChar { it.uppercase() }, style = typography.body, color = colors.textPrimary)
-                }
 
-                Spacer(Modifier.height(spacing.md))
-                SkinthesiaCard(onClick = { showFull = !showFull }) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "Full ingredient list", style = typography.labelLarge, color = colors.textPrimary, modifier = Modifier.weight(1f))
-                        Icon(
-                            if (showFull) SkinthesiaIcons.ChevronUp else SkinthesiaIcons.ChevronDown,
-                            contentDescription = if (showFull) "Collapse" else "Expand",
-                            tint = colors.textMuted,
-                            modifier = Modifier.size(16.dp),
-                        )
+                    Spacer(Modifier.height(spacing.md))
+                    SkinthesiaCard(onClick = { showFull = !showFull }) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = "Full ingredient list", style = typography.labelLarge, color = colors.textPrimary, modifier = Modifier.weight(1f))
+                            Icon(
+                                if (showFull) SkinthesiaIcons.ChevronUp else SkinthesiaIcons.ChevronDown,
+                                contentDescription = if (showFull) "Collapse" else "Expand",
+                                tint = colors.textMuted,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                        AnimatedVisibility(visible = showFull) {
+                            Text(text = product.fullIngredients, style = typography.bodySmall, color = colors.textSecondary, modifier = Modifier.padding(top = 10.dp))
+                        }
                     }
-                    AnimatedVisibility(visible = showFull) {
-                        Text(text = product.fullIngredients, style = typography.bodySmall, color = colors.textSecondary, modifier = Modifier.padding(top = 10.dp))
+                } else {
+                    Spacer(Modifier.height(spacing.lg))
+                    SkinthesiaCard {
+                        SectionOverline(text = "Specifications")
+                        Spacer(Modifier.height(6.dp))
+                        Text(text = product.fullIngredients, style = typography.body, color = colors.textPrimary)
                     }
                 }
 

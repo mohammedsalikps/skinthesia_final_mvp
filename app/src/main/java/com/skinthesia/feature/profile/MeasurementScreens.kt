@@ -66,6 +66,7 @@ import com.skinthesia.feature.measurement.SimulatedNote
 import com.skinthesia.feature.measurement.SimulatedTag
 import com.skinthesia.feature.measurement.format
 import com.skinthesia.feature.measurement.icon
+import com.skinthesia.feature.measurement.shortLabel
 import com.skinthesia.hardware.probe.SkinProbeManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -74,12 +75,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-
-private fun SensorType.short(): String = when (this) {
-    SensorType.PH -> "pH"
-    SensorType.HYDRATION -> "Hydration"
-    SensorType.TEMPERATURE -> "Temp"
-}
 
 class MeasurementHistoryViewModel(sessions: SkinProbeRepository) : ViewModel() {
     val sessions: StateFlow<List<MeasurementSession>?> = sessions.sessions()
@@ -121,7 +116,7 @@ fun MeasurementHistoryScreen() {
                     Spacer(Modifier.height(12.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         SensorType.entries.forEach { sensor ->
-                            session.average(sensor)?.let { value -> Tag(text = sensor.short() + " " + sensor.format(value), tone = TagTone.NEUTRAL) }
+                            session.average(sensor)?.let { value -> Tag(text = sensor.shortLabel + " " + sensor.format(value), tone = TagTone.NEUTRAL) }
                         }
                         if (!session.isComplete) Tag(text = "Incomplete", tone = TagTone.ROSE)
                     }

@@ -113,6 +113,8 @@ object Fixtures {
                 SensorMeasurement("r-${region.name}-h", "user-test", "ses-1", region, SensorType.HYDRATION, value, NOW, source),
                 SensorMeasurement("r-${region.name}-p", "user-test", "ses-1", region, SensorType.PH, ph, NOW, source),
                 SensorMeasurement("r-${region.name}-t", "user-test", "ses-1", region, SensorType.TEMPERATURE, 32.4, NOW, source),
+                SensorMeasurement("r-${region.name}-s", "user-test", "ses-1", region, SensorType.SEBUM, 45.0, NOW, source),
+                SensorMeasurement("r-${region.name}-b", "user-test", "ses-1", region, SensorType.SKIN_BARRIER, 60.0, NOW, source),
             )
         }
         return MeasurementSession(

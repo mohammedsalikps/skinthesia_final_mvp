@@ -12,6 +12,8 @@ enum class SensorType(val label: String, val unit: String, val decimals: Int) {
     PH("pH", "", 1),
     HYDRATION("Hydration", "index", 0),
     TEMPERATURE("Skin temperature", "°C", 1),
+    SEBUM("Sebum", "index", 0),
+    SKIN_BARRIER("Skin barrier", "index", 0),
 }
 
 /** Where on the face a probe reading was taken. */

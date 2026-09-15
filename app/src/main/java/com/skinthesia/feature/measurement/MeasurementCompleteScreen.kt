@@ -78,13 +78,6 @@ class MeasurementCompleteViewModel(
     }
 }
 
-private val SensorType.shortLabel: String
-    get() = when (this) {
-        SensorType.PH -> "pH"
-        SensorType.HYDRATION -> "Hydration"
-        SensorType.TEMPERATURE -> "Temp"
-    }
-
 /** Screen 16: the session summary, clearly labelled when the readings are simulated. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

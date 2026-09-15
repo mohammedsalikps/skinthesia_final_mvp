@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -18,8 +19,13 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.sp
+import com.skinthesia.R
 import com.skinthesia.core.design.PlayfairDisplay
 import com.skinthesia.core.design.SkinthesiaPalette
+import com.skinthesia.core.ui.components.SkinthesiaImage
+import com.skinthesia.domain.model.ImageSource
+import com.skinthesia.domain.model.Product
+import com.skinthesia.domain.model.ProductCategory
 import com.skinthesia.domain.model.ProductForm
 import com.skinthesia.domain.model.ProductTone
 import kotlin.math.min
@@ -83,6 +89,31 @@ fun ProductArtwork(
                 drawText(layout, topLeft = Offset(-layout.size.width / 2f, -layout.size.height / 2f))
             }
         }
+    }
+}
+
+/**
+ * A catalogue product's visual: drawn [ProductArtwork] for every topical product, but
+ * the Skinthesia Pro hardware entry uses the app's own real probe photo instead - never
+ * a drawn bottle shape, and never a generated image.
+ */
+@Composable
+fun ProductVisual(product: Product, modifier: Modifier = Modifier, contentDescription: String? = null) {
+    if (product.category == ProductCategory.PRO) {
+        SkinthesiaImage(
+            source = ImageSource.Resource(R.drawable.probe_device),
+            contentDescription = contentDescription,
+            modifier = modifier,
+            contentScale = ContentScale.Fit,
+        )
+    } else {
+        ProductArtwork(
+            form = product.form,
+            tone = product.tone,
+            modifier = modifier,
+            mark = product.brand.take(1).uppercase(),
+            contentDescription = contentDescription,
+        )
     }
 }
 

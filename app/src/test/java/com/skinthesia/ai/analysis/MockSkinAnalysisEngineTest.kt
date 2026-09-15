@@ -53,7 +53,7 @@ class MockSkinAnalysisEngineTest {
     fun `report builder exposes measured values and visual estimates`() = runTest {
         val combined = analyze()
         val report = ReportBuilder().build(Fixtures.assessment(combined = combined))!!
-        assertEquals(3, report.measuredValues.size)
+        assertEquals(5, report.measuredValues.size)
         assertTrue(report.measuredValuesSimulated)
         assertTrue(report.visualAnalysisSimulated)
         assertEquals(50, report.visualAnalysis.first().level)
