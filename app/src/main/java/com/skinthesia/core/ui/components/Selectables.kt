@@ -2,7 +2,10 @@ package com.skinthesia.core.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -28,12 +31,14 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -67,9 +72,21 @@ fun CheckCircle(
         animationSpec = tween(motion.duration(motion.fast)),
         label = "checkOutline",
     )
+    // A small, satisfying overshoot the moment a step is completed - settles
+    // straight back to rest when unchecked, so it never bounces on the way out.
+    val pop = remember { Animatable(1f) }
+    LaunchedEffect(selected, motion.reducedMotion) {
+        if (selected && !motion.reducedMotion) {
+            pop.snapTo(0.7f)
+            pop.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow))
+        } else {
+            pop.snapTo(1f)
+        }
+    }
     Box(
         modifier = modifier
             .size(size)
+            .scale(pop.value)
             .clip(SkinthesiaTheme.shapes.pill)
             .background(fill)
             .border(1.dp, outline, SkinthesiaTheme.shapes.pill),

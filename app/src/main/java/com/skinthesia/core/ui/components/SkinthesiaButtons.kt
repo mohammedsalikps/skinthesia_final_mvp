@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
@@ -67,6 +68,12 @@ fun SkinthesiaPrimaryButton(
             .pressScale(interaction)
             .fillMaxWidth()
             .height(spacing.buttonHeight)
+            .shadow(
+                elevation = if (enabled) 8.dp else 0.dp,
+                shape = SkinthesiaTheme.shapes.pill,
+                ambientColor = colors.primary.copy(alpha = 0.35f),
+                spotColor = colors.primary.copy(alpha = 0.35f),
+            )
             .clip(SkinthesiaTheme.shapes.pill)
             .background(container)
             .clickable(

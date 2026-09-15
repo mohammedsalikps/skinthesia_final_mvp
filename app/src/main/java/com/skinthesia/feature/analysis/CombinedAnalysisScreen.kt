@@ -72,6 +72,7 @@ import com.skinthesia.core.ui.components.FadeInUp
 import com.skinthesia.core.ui.components.ListRow
 import com.skinthesia.core.ui.components.ScoreRing
 import com.skinthesia.core.ui.components.SectionOverline
+import com.skinthesia.core.ui.components.SkinPrintRadial
 import com.skinthesia.core.ui.components.SkinthesiaCard
 import com.skinthesia.core.ui.components.SkinthesiaPrimaryButton
 import com.skinthesia.core.ui.components.Tag
@@ -289,6 +290,8 @@ fun CombinedAnalysisScreen() {
         }
         if (result != null && inputs != null) {
             Spacer(Modifier.height(spacing.lg))
+            FadeInUp(delayMillis = motion.stagger(1)) { SkinPrintSignature(result.skinPrint) }
+            Spacer(Modifier.height(spacing.md))
             FadeInUp(delayMillis = motion.stagger(2)) { Highlights(result) }
             Spacer(Modifier.height(spacing.md))
             FadeInUp(delayMillis = motion.stagger(3)) { WhatWentIn(inputs, result) }
@@ -473,6 +476,22 @@ private fun DiagramNodeView(node: DiagramNode, highlighted: Boolean, done: Boole
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
+    }
+}
+
+/** The freshly-built SkinPrint signature, shown once as its own reveal beat right after the core settles. */
+@Composable
+private fun SkinPrintSignature(skinPrint: SkinPrint) {
+    val colors = SkinthesiaTheme.colors
+    val typography = SkinthesiaTheme.typography
+    SkinthesiaCard(elevated = true) {
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            SectionOverline(text = "Your SkinPrint signature")
+            Spacer(Modifier.height(4.dp))
+            Text(text = skinPrint.band.label, style = typography.titleSmall, color = colors.textPrimary)
+            Spacer(Modifier.height(6.dp))
+            SkinPrintRadial(scores = skinPrint.scores, overall = skinPrint.overall, band = skinPrint.band, size = 224.dp)
+        }
     }
 }
 

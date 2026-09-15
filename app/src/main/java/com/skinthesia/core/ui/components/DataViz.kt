@@ -1,9 +1,16 @@
 package com.skinthesia.core.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +26,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +44,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -252,7 +263,9 @@ data class ChartPoint(val label: String, val value: Float)
 
 /**
  * Smooth trend line with a soft area fill, value labels and optional upcoming
- * (not yet measured) slots drawn as hollow dashed markers.
+ * (not yet measured) slots drawn as hollow dashed markers. Set [selectable] to
+ * let the user tap a point and reveal its change since the previous one below
+ * the chart - the value/label are already always visible on the line itself.
  */
 @Composable
 fun TrendChart(
@@ -264,73 +277,133 @@ fun TrendChart(
     lineColor: Color = SkinthesiaTheme.colors.primary,
     height: Dp = 180.dp,
     valueDecimals: Int = 0,
+    selectable: Boolean = false,
 ) {
     val colors = SkinthesiaTheme.colors
     val typography = SkinthesiaTheme.typography
     val measurer = rememberTextMeasurer()
     val reveal = rememberReveal(1f, key = points, durationMillis = 1200).value
     val description = points.joinToString { "${it.label} ${fmt(it.value, valueDecimals)}" }
-    Canvas(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(height)
-            .clearAndSetSemantics { contentDescription = "Trend: $description" },
-    ) {
-        if (points.isEmpty()) return@Canvas
-        val slots = points.size + upcomingLabels.size
-        val labelBand = 22.dp.toPx()
-        val valueBand = 20.dp.toPx()
-        val sidePad = 18.dp.toPx()
-        val top = valueBand
-        val bottom = size.height - labelBand
-        val values = points.map { it.value }
-        val lo = minValue ?: (values.min() - 8f).coerceAtLeast(0f)
-        val hi = maxValue ?: (values.max() + 6f).coerceAtMost(100f).coerceAtLeast(lo + 1f)
-        fun x(i: Int) = if (slots == 1) size.width / 2 else sidePad + (size.width - sidePad * 2) * i / (slots - 1)
-        fun y(v: Float) = bottom - (bottom - top) * ((v - lo) / (hi - lo))
+    var selected by remember(points) { mutableStateOf<Int?>(null) }
 
-        for (g in 0..3) {
-            val gy = top + (bottom - top) * g / 3f
-            drawLine(colors.divider, Offset(0f, gy), Offset(size.width, gy), 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 8f)))
-        }
+    Column(modifier = modifier.fillMaxWidth()) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(height)
+                .then(
+                    if (selectable && points.isNotEmpty()) {
+                        Modifier.pointerInput(points) {
+                            detectTapGestures { offset ->
+                                val slots = points.size + upcomingLabels.size
+                                val sidePad = 18.dp.toPx()
+                                fun x(i: Int) = if (slots == 1) size.width / 2f else sidePad + (size.width - sidePad * 2) * i / (slots - 1)
+                                val nearest = points.indices.minByOrNull { abs(x(it) - offset.x) }
+                                selected = if (selected == nearest) null else nearest
+                            }
+                        }
+                    } else {
+                        Modifier
+                    },
+                )
+                .clearAndSetSemantics { contentDescription = "Trend: $description" },
+        ) {
+            if (points.isEmpty()) return@Canvas
+            val slots = points.size + upcomingLabels.size
+            val labelBand = 22.dp.toPx()
+            val valueBand = 20.dp.toPx()
+            val sidePad = 18.dp.toPx()
+            val top = valueBand
+            val bottom = size.height - labelBand
+            val values = points.map { it.value }
+            val lo = minValue ?: (values.min() - 8f).coerceAtLeast(0f)
+            val hi = maxValue ?: (values.max() + 6f).coerceAtMost(100f).coerceAtLeast(lo + 1f)
+            fun x(i: Int) = if (slots == 1) size.width / 2 else sidePad + (size.width - sidePad * 2) * i / (slots - 1)
+            fun y(v: Float) = bottom - (bottom - top) * ((v - lo) / (hi - lo))
 
-        val coords = points.mapIndexed { i, p -> Offset(x(i), y(p.value)) }
-        val line = Path().apply {
-            moveTo(coords.first().x, coords.first().y)
-            for (i in 1 until coords.size) {
-                val p0 = coords[i - 1]
-                val p1 = coords[i]
-                val cx = (p0.x + p1.x) / 2
-                cubicTo(cx, p0.y, cx, p1.y, p1.x, p1.y)
+            for (g in 0..3) {
+                val gy = top + (bottom - top) * g / 3f
+                drawLine(colors.divider, Offset(0f, gy), Offset(size.width, gy), 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 8f)))
+            }
+
+            val coords = points.mapIndexed { i, p -> Offset(x(i), y(p.value)) }
+            val line = Path().apply {
+                moveTo(coords.first().x, coords.first().y)
+                for (i in 1 until coords.size) {
+                    val p0 = coords[i - 1]
+                    val p1 = coords[i]
+                    val cx = (p0.x + p1.x) / 2
+                    cubicTo(cx, p0.y, cx, p1.y, p1.x, p1.y)
+                }
+            }
+            val area = Path().apply {
+                addPath(line)
+                lineTo(coords.last().x, bottom)
+                lineTo(coords.first().x, bottom)
+                close()
+            }
+            clipRect(right = size.width * reveal) {
+                drawPath(area, Brush.verticalGradient(listOf(lineColor.copy(alpha = 0.18f), lineColor.copy(alpha = 0f)), startY = top, endY = bottom))
+                drawPath(line, lineColor, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
+            }
+
+            if (selected != null) {
+                val sc = coords[selected!!]
+                drawLine(lineColor.copy(alpha = 0.3f), Offset(sc.x, top), Offset(sc.x, bottom), strokeWidth = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 4f)))
+            }
+
+            coords.forEachIndexed { i, c ->
+                val last = i == coords.lastIndex
+                val isSelected = selected == i
+                if (last) drawCircle(lineColor.copy(alpha = 0.16f), radius = 11.dp.toPx(), center = c)
+                if (isSelected) drawCircle(lineColor.copy(alpha = 0.22f), radius = 13.dp.toPx(), center = c)
+                drawCircle(colors.surfaceElevated, radius = if (last || isSelected) 5.5.dp.toPx() else 4.dp.toPx(), center = c)
+                drawCircle(lineColor, radius = if (last || isSelected) 5.5.dp.toPx() else 4.dp.toPx(), center = c, style = Stroke(2.dp.toPx()))
+                val valueLayout = measurer.measure(fmt(points[i].value, valueDecimals), typography.numeric.copy(fontSize = 11.sp, color = colors.textPrimary))
+                drawText(valueLayout, topLeft = Offset(c.x - valueLayout.size.width / 2f, c.y - valueLayout.size.height - 8.dp.toPx()))
+            }
+            upcomingLabels.forEachIndexed { j, _ ->
+                val c = Offset(x(points.size + j), bottom - 6.dp.toPx())
+                drawCircle(colors.borderStrong, radius = 4.dp.toPx(), center = c, style = Stroke(1.2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(3f, 3f))))
+            }
+            (points.map { it.label } + upcomingLabels).forEachIndexed { i, label ->
+                val upcoming = i >= points.size
+                val layout = measurer.measure(label, typography.caption.copy(color = if (upcoming) colors.textMuted.copy(alpha = 0.7f) else colors.textSecondary, textAlign = TextAlign.Center))
+                drawText(layout, topLeft = Offset(x(i) - layout.size.width / 2f, bottom + 6.dp.toPx()))
             }
         }
-        val area = Path().apply {
-            addPath(line)
-            lineTo(coords.last().x, bottom)
-            lineTo(coords.first().x, bottom)
-            close()
-        }
-        clipRect(right = size.width * reveal) {
-            drawPath(area, Brush.verticalGradient(listOf(lineColor.copy(alpha = 0.18f), lineColor.copy(alpha = 0f)), startY = top, endY = bottom))
-            drawPath(line, lineColor, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
-        }
 
-        coords.forEachIndexed { i, c ->
-            val last = i == coords.lastIndex
-            if (last) drawCircle(lineColor.copy(alpha = 0.16f), radius = 11.dp.toPx(), center = c)
-            drawCircle(colors.surfaceElevated, radius = if (last) 5.5.dp.toPx() else 4.dp.toPx(), center = c)
-            drawCircle(lineColor, radius = if (last) 5.5.dp.toPx() else 4.dp.toPx(), center = c, style = Stroke(2.dp.toPx()))
-            val valueLayout = measurer.measure(fmt(points[i].value, valueDecimals), typography.numeric.copy(fontSize = 11.sp, color = colors.textPrimary))
-            drawText(valueLayout, topLeft = Offset(c.x - valueLayout.size.width / 2f, c.y - valueLayout.size.height - 8.dp.toPx()))
-        }
-        upcomingLabels.forEachIndexed { j, _ ->
-            val c = Offset(x(points.size + j), bottom - 6.dp.toPx())
-            drawCircle(colors.borderStrong, radius = 4.dp.toPx(), center = c, style = Stroke(1.2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(3f, 3f))))
-        }
-        (points.map { it.label } + upcomingLabels).forEachIndexed { i, label ->
-            val upcoming = i >= points.size
-            val layout = measurer.measure(label, typography.caption.copy(color = if (upcoming) colors.textMuted.copy(alpha = 0.7f) else colors.textSecondary, textAlign = TextAlign.Center))
-            drawText(layout, topLeft = Offset(x(i) - layout.size.width / 2f, bottom + 6.dp.toPx()))
+        if (selectable) {
+            AnimatedVisibility(
+                visible = selected != null,
+                enter = fadeIn(tween(200)) + expandVertically(tween(200, easing = FastOutSlowInEasing)),
+                exit = fadeOut(tween(120)) + shrinkVertically(tween(120)),
+            ) {
+                val i = selected
+                if (i != null) {
+                    val point = points[i]
+                    val prev = points.getOrNull(i - 1)
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(text = point.label, style = typography.labelSmall, color = colors.textMuted)
+                            Text(text = fmt(point.value, valueDecimals), style = typography.metric, color = colors.textPrimary)
+                        }
+                        if (prev != null) {
+                            val delta = (point.value - prev.value).toDouble()
+                            Column(horizontalAlignment = Alignment.End) {
+                                DeltaBadge(delta = delta, improved = if (abs(delta) < 0.05) null else delta > 0, decimals = valueDecimals)
+                                Spacer(Modifier.height(3.dp))
+                                Text(text = "since ${prev.label}", style = typography.caption, color = colors.textMuted)
+                            }
+                        } else {
+                            Text(text = "First recorded value", style = typography.caption, color = colors.textMuted)
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -1,8 +1,12 @@
 package com.skinthesia.feature.journey
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,11 +27,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.skinthesia.core.ui.components.pressScale
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -59,6 +71,7 @@ import com.skinthesia.core.ui.icons.SkinthesiaIcons
 import com.skinthesia.domain.model.AssessmentKind
 import com.skinthesia.domain.model.ImageSource
 import com.skinthesia.domain.model.JourneyMilestone
+import com.skinthesia.domain.model.MilestoneKind
 import com.skinthesia.domain.model.PersonalizedPlan
 import com.skinthesia.domain.model.ProgressSnapshot
 import com.skinthesia.domain.model.SkinPrintDimension
@@ -217,6 +230,7 @@ fun JourneyScreen(onSelectTab: (Int) -> Unit) {
                         points = snapshots.map { ChartPoint(weekLabel(it.week, short = true), it.overall.toFloat()) },
                         upcomingLabels = JourneyClock.MILESTONE_WEEKS.filter { it > currentWeek }.map { weekLabel(it, short = true) },
                         height = 170.dp,
+                        selectable = true,
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(text = "A tracking indicator for your own progress, not a medical score.", style = typography.caption, color = colors.textMuted)
@@ -345,23 +359,64 @@ fun JourneyScreen(onSelectTab: (Int) -> Unit) {
     }
 }
 
+private fun MilestoneKind.icon(): ImageVector = when (this) {
+    MilestoneKind.STARTED -> SkinthesiaIcons.Sunrise
+    MilestoneKind.FIRST_CHECK_IN -> SkinthesiaIcons.Scan
+    MilestoneKind.SCORE_GAIN -> SkinthesiaIcons.Trend
+    MilestoneKind.TARGET_REACHED -> SkinthesiaIcons.Target
+    MilestoneKind.STREAK -> SkinthesiaIcons.Sparkle
+    MilestoneKind.PLAN_EVOLVED -> SkinthesiaIcons.Journey
+    MilestoneKind.PROGRAMME_COMPLETE -> SkinthesiaIcons.Award
+    MilestoneKind.UPCOMING -> SkinthesiaIcons.Clock
+}
+
+/** Tap a milestone to bring its own detail into focus on the timeline. */
 @Composable
 private fun MilestoneRow(milestone: JourneyMilestone, isLast: Boolean) {
     val colors = SkinthesiaTheme.colors
     val typography = SkinthesiaTheme.typography
+    val motion = SkinthesiaTheme.motion
     val achieved = !milestone.isUpcoming
-    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).semantics(mergeDescendants = true) {}) {
+    var focused by rememberSaveable(milestone.id) { mutableStateOf(false) }
+    val interaction = remember { MutableInteractionSource() }
+    val rowBackground by animateColorAsState(
+        targetValue = if (focused) colors.primaryMist.copy(alpha = 0.5f) else Color.Transparent,
+        animationSpec = tween(motion.duration(motion.base)),
+        label = "milestoneFocus",
+    )
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .pressScale(interaction, pressedScale = 0.985f)
+            .clip(SkinthesiaTheme.shapes.small)
+            .background(rowBackground)
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                role = Role.Button,
+                onClickLabel = if (focused) "Hide detail" else "Show detail",
+                onClick = { focused = !focused },
+            )
+            .padding(vertical = 4.dp)
+            .semantics(mergeDescendants = true) {},
+    ) {
         Column(Modifier.width(28.dp).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
                 modifier = Modifier
                     .padding(top = 2.dp)
-                    .size(18.dp)
+                    .size(if (focused) 22.dp else 18.dp)
                     .clip(CircleShape)
                     .background(if (achieved) colors.success else colors.surface)
                     .border(1.5.dp, if (achieved) colors.success else colors.borderStrong, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                if (achieved) Icon(SkinthesiaIcons.Check, contentDescription = null, tint = colors.textOnPrimary, modifier = Modifier.size(11.dp))
+                Icon(
+                    milestone.kind.icon(),
+                    contentDescription = null,
+                    tint = if (achieved) colors.textOnPrimary else colors.textMuted,
+                    modifier = Modifier.size(if (focused) 13.dp else 11.dp),
+                )
             }
             if (!isLast) {
                 Box(
@@ -375,7 +430,7 @@ private fun MilestoneRow(milestone: JourneyMilestone, isLast: Boolean) {
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f).padding(bottom = if (isLast) 0.dp else 18.dp)) {
-            SectionOverline(text = weekLabel(milestone.week))
+            SectionOverline(text = weekLabel(milestone.week), color = if (focused) colors.primary else colors.textMuted)
             Spacer(Modifier.height(2.dp))
             Text(text = milestone.title, style = typography.labelLarge, color = if (achieved) colors.textPrimary else colors.textSecondary)
             Text(text = milestone.detail, style = typography.bodySmall, color = colors.textSecondary)

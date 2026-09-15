@@ -5,6 +5,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -23,23 +24,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.skinthesia.R
 import com.skinthesia.core.design.SkinthesiaTheme
 import com.skinthesia.core.ui.art.ProductArtwork
-import com.skinthesia.core.ui.components.BrandMonogram
 import com.skinthesia.core.ui.components.BrandWordmark
 import com.skinthesia.domain.model.ProductForm
 import com.skinthesia.domain.model.ProductTone
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -47,11 +55,17 @@ private const val FULL_DURATION_MS = 5000
 private const val REDUCED_DURATION_MS = 900
 
 /**
- * The ~5 second brand opening: floating skincare silhouettes dissolve into light and
- * converge to reveal the Skinthesia mark, then the wordmark and tagline settle in.
- * Shown once per app launch, after the system splash hands off. Progress is a single
- * deterministic, time-based value so it behaves the same on every device and can't
- * drift or desync; tapping anywhere skips straight to the app.
+ * The Skinthesia opening: a cinematic ~5 second brand moment shown once per app
+ * launch, after the system splash hands off. A calm ivory field gathers light,
+ * science-inspired data points and skincare silhouettes toward its centre; they
+ * dissolve into fine particles that converge and are swept by light into the
+ * official emblem, which the "Skinthesia" wordmark then settles beneath.
+ *
+ * SKIN + SCIENCE + DATA + INTELLIGENCE -> SKINTHESIA.
+ *
+ * Progress is a single deterministic, time-based value so every phase lands at
+ * the same moment on every device and can't drift or desync; tapping anywhere
+ * skips straight to the app. Reduced-motion gets a short, still-branded crossfade.
  */
 @Composable
 fun LaunchIntro(onFinished: () -> Unit, modifier: Modifier = Modifier) {
@@ -83,6 +97,7 @@ fun LaunchIntro(onFinished: () -> Unit, modifier: Modifier = Modifier) {
         if (motion.reducedMotion) {
             ReducedRevealContent(t)
         } else {
+            AmbientDust(t)
             FloatingProducts(t)
             ParticleField(t)
             RevealContent(t)
@@ -93,8 +108,8 @@ fun LaunchIntro(onFinished: () -> Unit, modifier: Modifier = Modifier) {
 @Composable
 private fun EnvironmentGlow(t: Float, reducedMotion: Boolean) {
     val colors = SkinthesiaTheme.colors
-    val envIn = remap(t, 0f, 0.12f)
-    val glowPulse = 1f + 0.06f * bellCurve(t, 0.74f, 0.14f)
+    val envIn = remap(t, 0f, 0.1f)
+    val glowPulse = 1f + 0.06f * bellCurve(t, 0.62f, 0.13f)
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -108,6 +123,43 @@ private fun EnvironmentGlow(t: Float, reducedMotion: Boolean) {
                 ),
             ),
     )
+}
+
+/**
+ * A handful of fine, ring-only "data points" that begin drifting the instant the
+ * screen is almost empty (phase 1), well before the skincare silhouettes and the
+ * main particle system arrive - the quiet, scientific opening beat.
+ */
+private data class DustMote(val angle: Float, val radius: Float, val size: Float, val speed: Float)
+
+private val DUST = List(9) { i ->
+    val a = i * 2.399963f
+    DustMote(angle = a, radius = 70f + (i % 4) * 34f, size = 1.6f + (i % 3) * 0.6f, speed = 0.6f + (i % 3) * 0.25f)
+}
+
+@Composable
+private fun AmbientDust(t: Float) {
+    val colors = SkinthesiaTheme.colors
+    val density = LocalDensity.current
+    val alphaEnvelope = remap(t, 0.0f, 0.08f) * (1f - remap(t, 0.26f, 0.4f))
+    if (alphaEnvelope <= 0.01f) return
+    Canvas(Modifier.fillMaxSize()) {
+        val cx = size.width / 2f
+        val cy = size.height / 2f
+        val pxPerDp = density.density
+        DUST.forEach { m ->
+            val drift = t * m.speed
+            val angle = m.angle + drift * 0.6f
+            val r = (m.radius * (1f - 0.2f * drift)) * pxPerDp
+            val p = Offset(cx + r * cos(angle), cy + r * sin(angle))
+            drawCircle(
+                color = colors.gold.copy(alpha = alphaEnvelope * 0.5f),
+                radius = m.size * pxPerDp,
+                center = p,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(0.8f * pxPerDp),
+            )
+        }
+    }
 }
 
 private data class IntroProduct(
@@ -129,13 +181,13 @@ private val INTRO_PRODUCTS = listOf(
 @Composable
 private fun FloatingProducts(t: Float) {
     INTRO_PRODUCTS.forEachIndexed { index, product ->
-        val delay = index * 0.025f
-        val fadeIn = remap(t, 0.02f + delay, 0.16f + delay)
-        val fadeOut = 1f - remap(t, 0.40f + delay, 0.56f + delay)
+        val delay = index * 0.02f
+        val fadeIn = remap(t, 0.1f + delay, 0.22f + delay)
+        val fadeOut = 1f - remap(t, 0.38f + delay, 0.53f + delay)
         val alpha = (fadeIn * fadeOut).coerceIn(0f, 1f)
         if (alpha <= 0f) return@forEachIndexed
 
-        val orbit = easeInOut(remap(t, 0.10f, 0.50f))
+        val orbit = easeInOut(remap(t, 0.12f, 0.5f))
         val settle = 1f - 0.5f * orbit
         val wobble = sin(t * product.wobbleFreq * 6.2832f + product.wobblePhase)
         val x = product.startX * settle + wobble * 5f
@@ -204,12 +256,12 @@ private fun ParticleField(t: Float) {
             val targetX = cx + (u - 0.5f) * EMBLEM_REVEAL_DP * pxPerDp
             val targetY = cy + (v - 0.5f) * EMBLEM_REVEAL_DP * pxPerDp
 
-            val fadeIn = remap(t, 0.18f + (i % 5) * 0.01f, 0.32f)
-            val fadeOut = 1f - remap(t, 0.74f, 0.86f)
+            val fadeIn = remap(t, 0.14f + (i % 5) * 0.01f, 0.26f)
+            val fadeOut = 1f - remap(t, 0.62f, 0.73f)
             val particleAlpha = (fadeIn * fadeOut).coerceIn(0f, 1f)
             if (particleAlpha <= 0.01f) return@forEachIndexed
 
-            val converge = easeInOut(remap(t, 0.46f, 0.80f))
+            val converge = easeInOut(remap(t, 0.34f, 0.65f))
             val px = lerp(startX, targetX, converge)
             val py = lerp(startY, targetY, converge)
             val radius = (1.1f + (i % 4) * 0.5f) * pxPerDp
@@ -223,9 +275,11 @@ private fun ParticleField(t: Float) {
 @Composable
 private fun RevealContent(t: Float) {
     val colors = SkinthesiaTheme.colors
-    val emblemAlpha = remap(t, 0.62f, 0.84f)
-    val glow = bellCurve(t, 0.76f, 0.10f)
-    val wordmarkT = remap(t, 0.84f, 0.97f)
+    val emblemAlpha = remap(t, 0.5f, 0.67f)
+    val glow = bellCurve(t, 0.62f, 0.1f)
+    val sweepT = remap(t, 0.55f, 0.71f)
+    val sweepAlpha = (1f - abs(2f * sweepT - 1f)).coerceIn(0f, 1f)
+    val wordmarkT = remap(t, 0.71f, 0.86f)
     val wordmarkOffset = (1f - easeOut(wordmarkT)) * 10f
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -240,9 +294,7 @@ private fun RevealContent(t: Float) {
                 )
             }
             if (emblemAlpha > 0.01f) {
-                Box(modifier = Modifier.alpha(emblemAlpha)) {
-                    BrandMonogram(size = EMBLEM_REVEAL_DP.dp)
-                }
+                EmblemWithSweep(alpha = emblemAlpha, sweepProgress = sweepT, sweepAlpha = sweepAlpha, size = EMBLEM_REVEAL_DP.dp)
             }
         }
         if (wordmarkT > 0.01f) {
@@ -263,6 +315,49 @@ private fun RevealContent(t: Float) {
     }
 }
 
+/**
+ * The emblem with a single soft light sweep crossing it once as it solidifies -
+ * masked to the artwork's own opaque pixels ([BlendMode.SrcAtop] inside an
+ * offscreen-composited layer) so the highlight only ever touches the mark
+ * itself, never the transparent air around it.
+ */
+@Composable
+private fun EmblemWithSweep(alpha: Float, sweepProgress: Float, sweepAlpha: Float, size: Dp) {
+    val density = LocalDensity.current
+    Box(
+        modifier = Modifier
+            .size(size)
+            .graphicsLayer {
+                this.alpha = alpha
+                compositingStrategy = CompositingStrategy.Offscreen
+            }
+            .drawWithContent {
+                drawContent()
+                if (sweepAlpha > 0.01f) {
+                    val span = this.size.width + this.size.height
+                    val bandCenter = span * (sweepProgress * 1.5f - 0.25f)
+                    val bandHalf = with(density) { 26.dp.toPx() }
+                    drawRect(
+                        brush = Brush.linearGradient(
+                            0f to Color.Transparent,
+                            0.5f to Color.White.copy(alpha = sweepAlpha * 0.85f),
+                            1f to Color.Transparent,
+                            start = Offset(bandCenter - bandHalf, 0f),
+                            end = Offset(bandCenter + bandHalf, this.size.height),
+                        ),
+                        blendMode = BlendMode.SrcAtop,
+                    )
+                }
+            },
+    ) {
+        Image(
+            painter = painterResource(R.drawable.brand_emblem),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
 /** Short, still-branded version shown when the system asks for reduced motion. */
 @Composable
 private fun ReducedRevealContent(t: Float) {
@@ -271,7 +366,11 @@ private fun ReducedRevealContent(t: Float) {
     val wordmarkAlpha = remap(t, 0.45f, 0.75f)
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(modifier = Modifier.alpha(alpha)) {
-            BrandMonogram(size = EMBLEM_REVEAL_DP.dp)
+            Image(
+                painter = painterResource(R.drawable.brand_emblem),
+                contentDescription = null,
+                modifier = Modifier.size(EMBLEM_REVEAL_DP.dp),
+            )
         }
         Spacer(Modifier.height(14.dp))
         Box(modifier = Modifier.alpha(wordmarkAlpha)) {

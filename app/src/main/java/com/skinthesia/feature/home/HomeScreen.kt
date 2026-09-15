@@ -26,8 +26,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -50,15 +48,14 @@ import com.skinthesia.core.ui.components.DeltaBadge
 import com.skinthesia.core.ui.components.EmptyState
 import com.skinthesia.core.ui.components.FadeInUp
 import com.skinthesia.core.ui.components.LoadingState
-import com.skinthesia.core.ui.components.ScoreRing
 import com.skinthesia.core.ui.components.SectionHeader
 import com.skinthesia.core.ui.components.SectionOverline
+import com.skinthesia.core.ui.components.SkinPrintRadial
 import com.skinthesia.core.ui.components.SkinthesiaCard
 import com.skinthesia.core.ui.components.SkinthesiaDivider
 import com.skinthesia.core.ui.components.SkinthesiaScreen
 import com.skinthesia.core.ui.components.Tag
 import com.skinthesia.core.ui.components.TagTone
-import com.skinthesia.core.ui.components.rememberReveal
 import com.skinthesia.core.ui.formatWeekday
 import com.skinthesia.core.ui.icons.SkinthesiaIcons
 import com.skinthesia.domain.model.Assessment
@@ -315,10 +312,8 @@ fun HomeScreen(onSelectTab: (Int) -> Unit) {
 private fun SkinPrintHero(skinPrint: SkinPrint, weekLabel: String, baseline: SkinPrint?, onOpen: () -> Unit) {
     val colors = SkinthesiaTheme.colors
     val typography = SkinthesiaTheme.typography
-    SkinthesiaCard(onClick = onOpen) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            ScoreRing(score = skinPrint.overall, size = 138.dp, strokeWidth = 7.dp, caption = null)
-            Spacer(Modifier.width(14.dp))
+    SkinthesiaCard(onClick = onOpen, elevated = true) {
+        Row(verticalAlignment = Alignment.Top) {
             Column(Modifier.weight(1f)) {
                 SectionOverline(text = "Your SkinPrint")
                 Spacer(Modifier.height(6.dp))
@@ -338,36 +333,18 @@ private fun SkinPrintHero(skinPrint: SkinPrint, weekLabel: String, baseline: Ski
                 } else {
                     Text(text = "Your starting point", style = typography.caption, color = colors.textMuted)
                 }
-                Spacer(Modifier.height(8.dp))
-                Text(text = "Updated $weekLabel", style = typography.caption, color = colors.textMuted)
             }
+            Text(text = "Updated $weekLabel", style = typography.caption, color = colors.textMuted)
         }
-        Spacer(Modifier.height(18.dp))
-        Row(Modifier.fillMaxWidth()) {
-            skinPrint.scores.forEachIndexed { index, score ->
-                Column(
-                    modifier = Modifier.weight(1f).semantics(mergeDescendants = true) { contentDescription = "${score.dimension.label} ${score.value}" },
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    VerticalBar(fraction = score.value / 100f, delayMillis = 350 + index * 90)
-                    Spacer(Modifier.height(6.dp))
-                    Text(text = score.value.toString(), style = typography.numeric, color = colors.textPrimary)
-                    Text(text = score.dimension.short(), style = typography.caption, color = colors.textMuted, maxLines = 1)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun VerticalBar(fraction: Float, delayMillis: Int) {
-    val colors = SkinthesiaTheme.colors
-    val reveal = rememberReveal(fraction.coerceIn(0f, 1f), durationMillis = 900, delayMillis = delayMillis)
-    Box(
-        modifier = Modifier.width(8.dp).height(46.dp).clip(CircleShape).background(colors.track),
-        contentAlignment = Alignment.BottomCenter,
-    ) {
-        Box(Modifier.fillMaxWidth().fillMaxHeight(reveal.value.coerceIn(0f, 1f)).clip(CircleShape).background(colors.primary))
+        Spacer(Modifier.height(6.dp))
+        SkinPrintRadial(
+            scores = skinPrint.scores,
+            overall = skinPrint.overall,
+            band = skinPrint.band,
+            size = 232.dp,
+            previous = baseline?.scores?.associate { it.dimension to it.value },
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+        )
     }
 }
 

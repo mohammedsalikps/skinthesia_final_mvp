@@ -1,5 +1,8 @@
 package com.skinthesia.feature.community
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -16,11 +19,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -219,6 +224,16 @@ fun AuthorRow(author: CommunityAuthor, createdAt: Long, now: Long, modifier: Mod
 @Composable
 fun LikeButton(liked: Boolean, count: Int, onClick: () -> Unit) {
     val colors = SkinthesiaTheme.colors
+    val motion = SkinthesiaTheme.motion
+    val pop = remember { Animatable(1f) }
+    LaunchedEffect(liked, motion.reducedMotion) {
+        if (liked && !motion.reducedMotion) {
+            pop.snapTo(0.6f)
+            pop.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium))
+        } else {
+            pop.snapTo(1f)
+        }
+    }
     Row(
         modifier = Modifier
             .clip(CircleShape)
@@ -230,7 +245,7 @@ fun LikeButton(liked: Boolean, count: Int, onClick: () -> Unit) {
             if (liked) SkinthesiaIcons.HeartFilled else SkinthesiaIcons.Heart,
             contentDescription = if (liked) "Helpful, selected" else "Mark as helpful",
             tint = if (liked) colors.accentBlushDeep else colors.textMuted,
-            modifier = Modifier.size(16.dp),
+            modifier = Modifier.size(16.dp).scale(pop.value),
         )
         Spacer(Modifier.width(4.dp))
         Text(text = "$count", style = SkinthesiaTheme.typography.caption, color = colors.textSecondary)

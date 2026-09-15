@@ -23,17 +23,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.skinthesia.core.design.SkinthesiaPalette
 import com.skinthesia.core.design.SkinthesiaTheme
 import com.skinthesia.core.ui.icons.SkinthesiaIcons
 
+/** A warm, low-alpha shadow tint instead of Android's default cool black. */
+private val CardShadowTint = SkinthesiaPalette.Cocoa.copy(alpha = 0.14f)
+
 /**
- * Cream card with a hairline border. Fills the available width by default so
- * stacked cards align; pass a width or weight modifier to size it otherwise.
- * Optional [onClick] makes the whole card tappable.
+ * Cream card with a hairline border and a soft, warm-toned shadow that lifts
+ * it gently off the page. Fills the available width by default so stacked
+ * cards align; pass a width or weight modifier to size it otherwise. Set
+ * [elevated] on a single hero card per screen (a SkinPrint, a headline stat)
+ * so it reads as the page's focal surface; optional [onClick] makes the whole
+ * card tappable.
  */
 @Composable
 fun SkinthesiaCard(
@@ -42,6 +50,7 @@ fun SkinthesiaCard(
     containerColor: Color = SkinthesiaTheme.colors.surface,
     borderColor: Color = SkinthesiaTheme.colors.border,
     contentPadding: PaddingValues = PaddingValues(SkinthesiaTheme.spacing.md),
+    elevated: Boolean = false,
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -49,6 +58,12 @@ fun SkinthesiaCard(
     val base = modifier
         .fillMaxWidth()
         .then(if (onClick != null) Modifier.pressScale(interaction, pressedScale = 0.99f) else Modifier)
+        .shadow(
+            elevation = if (elevated) 16.dp else 5.dp,
+            shape = shape,
+            ambientColor = CardShadowTint,
+            spotColor = CardShadowTint,
+        )
         .clip(shape)
         .background(containerColor)
         .border(SkinthesiaTheme.spacing.borderThin, borderColor, shape)

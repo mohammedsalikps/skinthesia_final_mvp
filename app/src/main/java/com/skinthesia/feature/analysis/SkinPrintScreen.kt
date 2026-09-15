@@ -41,8 +41,8 @@ import com.skinthesia.core.ui.components.DeltaBadge
 import com.skinthesia.core.ui.components.FadeInUp
 import com.skinthesia.core.ui.components.KeyValueRow
 import com.skinthesia.core.ui.components.LoadingState
-import com.skinthesia.core.ui.components.ScoreRing
 import com.skinthesia.core.ui.components.ScreenHeader
+import com.skinthesia.core.ui.components.SkinPrintRadial
 import com.skinthesia.core.ui.components.SectionHeader
 import com.skinthesia.core.ui.components.SectionOverline
 import com.skinthesia.core.ui.components.SkinthesiaCard
@@ -140,7 +140,13 @@ private fun SkinPrintContent(skinPrint: SkinPrint, state: SkinPrintUiState) {
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         SectionOverline(text = "Your SkinPrint")
         Spacer(Modifier.height(14.dp))
-        ScoreRing(score = skinPrint.overall, size = 230.dp, label = skinPrint.band.label)
+        SkinPrintRadial(
+            scores = skinPrint.scores,
+            overall = skinPrint.overall,
+            band = skinPrint.band,
+            size = 272.dp,
+            previous = previous?.scores?.associate { it.dimension to it.value },
+        )
         Spacer(Modifier.height(14.dp))
         Text(text = "${state.weekLabel} · ${formatDay(skinPrint.createdAt)}", style = typography.caption, color = colors.textMuted)
         if (previous != null && state.previousLabel != null) {
