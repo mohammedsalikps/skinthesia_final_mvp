@@ -20,3 +20,7 @@ signing.properties
 
 # Local copies of built APKs
 dist/
+
+# Python
+__pycache__/
+*.pyc

@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main, feature/**]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: Android app
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests
+        run: ./gradlew --no-configuration-cache testDebugUnitTest
+
+      - name: Assemble debug APK
+        run: ./gradlew --no-configuration-cache assembleDebug
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-reports
+          path: app/build/reports/tests/
+          if-no-files-found: ignore
+
+  firmware:
+    name: ESP32 firmware
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: arduino/setup-arduino-cli@v2
+
+      - name: Install ESP32 core and libraries
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32
+          arduino-cli lib install "SparkFun MAX3010x Pulse and Proximity Sensor Library"
+
+      - name: Compile sketch
+        run: arduino-cli compile --fqbn esp32:esp32:esp32 firmware/esp32-probe/SRC_CODE
+
+  tools:
+    name: Probe CLI
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Smoke test against the emulator
+        working-directory: tools/probe-cli
+        run: |
+          python -m py_compile probe_cli.py
+          python probe_cli.py emulate --port 5055 &
+          for i in $(seq 1 20); do python -c "import socket; socket.create_connection(('127.0.0.1', 5055), 1)" 2>/dev/null && break; sleep 0.25; done
+          python probe_cli.py read --host 127.0.0.1 --port 5055 --sebum
+          python probe_cli.py send --host 127.0.0.1 --port 5055 TEST_PH
