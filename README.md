@@ -34,6 +34,23 @@ This repository contains the complete MVP:
 | Probe bench diagnostics | [`tools/probe-cli/`](tools/probe-cli) | Python |
 | Technical documentation | [`docs/`](docs) | Markdown |
 
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/01-launch.png" width="200" alt="Launch" /><br/><sub>Launch</sub></td>
+    <td align="center"><img src="docs/screenshots/02-home.png" width="200" alt="Home" /><br/><sub>Home and SkinPrint</sub></td>
+    <td align="center"><img src="docs/screenshots/07-analysis.png" width="200" alt="Combined analysis" /><br/><sub>Combined analysis</sub></td>
+    <td align="center"><img src="docs/screenshots/03-skinprint.png" width="200" alt="SkinPrint detail" /><br/><sub>SkinPrint dimensions</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/04-probe.png" width="200" alt="Probe connection" /><br/><sub>Probe connection</sub></td>
+    <td align="center"><img src="docs/screenshots/05-projection.png" width="200" alt="12-week potential" /><br/><sub>12-week potential</sub></td>
+    <td align="center"><img src="docs/screenshots/06-marketplace.png" width="200" alt="Marketplace" /><br/><sub>Marketplace</sub></td>
+    <td></td>
+  </tr>
+</table>
+
 ## Key features
 
 **Assessment**
