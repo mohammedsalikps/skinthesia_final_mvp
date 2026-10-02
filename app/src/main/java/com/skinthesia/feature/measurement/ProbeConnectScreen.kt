@@ -52,6 +52,7 @@ import com.skinthesia.feature.common.FlowScaffold
 import com.skinthesia.feature.onboarding.OnboardingSteps
 import com.skinthesia.feature.onboarding.atLeast
 import com.skinthesia.hardware.probe.SkinProbeManager
+import com.skinthesia.hardware.probe.SwitchableSkinProbeManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -69,6 +70,9 @@ class ProbeConnectViewModel(
     private val _pairedId = MutableStateFlow<String?>(null)
     val pairedId: StateFlow<String?> = _pairedId.asStateFlow()
 
+    /** True only when [probe] is backed by the real ESP32 transport and can fall back to the existing simulated-probe experience if it can't be found. False in ordinary mock mode, where there is nothing to switch to. */
+    val canSimulate: Boolean = probe is SwitchableSkinProbeManager
+
     init {
         probe.acknowledgeError()
         viewModelScope.launch { _pairedId.value = profiles.current().pairedDeviceId }
@@ -77,6 +81,12 @@ class ProbeConnectViewModel(
     fun search() {
         probe.acknowledgeError()
         probe.startDiscovery()
+    }
+
+    /** Switches this session to the app's existing mock probe (MockBleDeviceProvider + SimulatedSensorDataProvider, unmodified) and starts the same discovery search already used above, so everything from here on behaves exactly like the existing mock-mode experience. No-op if [canSimulate] is false. */
+    fun simulate() {
+        (probe as? SwitchableSkinProbeManager)?.useSimulated()
+        search()
     }
 
     fun connect(device: ProbeDevice, onConnected: () -> Unit) {
@@ -165,7 +175,8 @@ fun ProbeConnectScreen() {
                 is ProbeState.Failed -> ErrorState(
                     title = s.error.title,
                     body = s.error.message,
-                    onRetry = viewModel::search,
+                    onRetry = if (viewModel.canSimulate) viewModel::simulate else viewModel::search,
+                    retryLabel = if (viewModel.canSimulate) "Simulate" else "Try again",
                     secondaryLabel = "Skip for now",
                     onSecondary = onSkip,
                 )

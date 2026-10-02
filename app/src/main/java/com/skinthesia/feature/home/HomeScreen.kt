@@ -49,6 +49,7 @@ import com.skinthesia.core.navigation.MarketplaceRoute
 import com.skinthesia.core.navigation.PlanRoute
 import com.skinthesia.core.navigation.ReportRoute
 import com.skinthesia.core.navigation.RoutineRoute
+import com.skinthesia.core.navigation.SkinProjectionRoute
 import com.skinthesia.core.navigation.SkinPrintRoute
 import com.skinthesia.core.navigation.containerViewModel
 import com.skinthesia.core.ui.art.FaceDiagram
@@ -271,6 +272,13 @@ fun HomeScreen(onSelectTab: (Int) -> Unit) {
                     onOpen = { navigator.navigate(ReportRoute(latest.id)) },
                 )
             }
+            Spacer(Modifier.height(spacing.md))
+            FadeInUp(delayMillis = motion.stagger(2)) {
+                SkinProjectionEntryCard(
+                    nextWeek = listOf(2, 4, 8, 12).firstOrNull { it > state.currentWeek } ?: 12,
+                    onClick = { navigator.navigate(SkinProjectionRoute) },
+                )
+            }
         }
 
         val focus = latest?.combined?.focusAreas.orEmpty()
@@ -461,6 +469,29 @@ private fun LatestAnalysisCard(assessment: Assessment, insight: String?, onOpen:
                     Icon(SkinthesiaIcons.ChevronRight, contentDescription = null, tint = colors.primary, modifier = Modifier.size(14.dp))
                 }
             }
+        }
+    }
+}
+
+/** A single, quiet entry point into the dedicated illustrative Skin Projection screen. */
+@Composable
+private fun SkinProjectionEntryCard(nextWeek: Int, onClick: () -> Unit) {
+    val colors = SkinthesiaTheme.colors
+    val typography = SkinthesiaTheme.typography
+    SkinthesiaCard(onClick = onClick) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                SectionOverline(text = "Your Skin Journey")
+                Spacer(Modifier.height(6.dp))
+                Text(text = "See your potential skin journey", style = typography.titleSmall, color = colors.textPrimary)
+                Spacer(Modifier.height(10.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "View Week $nextWeek Projection", style = typography.label, color = colors.primary)
+                    Spacer(Modifier.width(4.dp))
+                    Icon(SkinthesiaIcons.ArrowRight, contentDescription = null, tint = colors.primary, modifier = Modifier.size(14.dp))
+                }
+            }
+            Icon(SkinthesiaIcons.Journey, contentDescription = null, tint = colors.primary, modifier = Modifier.size(28.dp))
         }
     }
 }

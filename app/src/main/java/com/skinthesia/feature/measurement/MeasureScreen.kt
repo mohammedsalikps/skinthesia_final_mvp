@@ -48,15 +48,20 @@ import com.skinthesia.core.ui.components.SkinthesiaCard
 import com.skinthesia.core.ui.components.SkinthesiaPrimaryButton
 import com.skinthesia.core.ui.components.SkinthesiaTextButton
 import com.skinthesia.core.ui.icons.SkinthesiaIcons
+import com.skinthesia.domain.model.DataSource
+import com.skinthesia.domain.model.Ids
 import com.skinthesia.domain.model.MeasurementRegion
 import com.skinthesia.domain.model.ProbeError
 import com.skinthesia.domain.model.RegionMeasurementEvent
+import com.skinthesia.domain.model.SensorMeasurement
 import com.skinthesia.domain.model.SensorType
 import com.skinthesia.domain.repository.AssessmentRepository
 import com.skinthesia.domain.repository.SkinProbeRepository
 import com.skinthesia.domain.repository.UserProfileRepository
 import com.skinthesia.feature.common.FlowScaffold
 import com.skinthesia.feature.onboarding.OnboardingSteps
+import com.skinthesia.hardware.probe.SensorReadContext
+import com.skinthesia.hardware.probe.SimulatedSensorDataProvider
 import com.skinthesia.hardware.probe.SkinProbeManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -94,6 +99,9 @@ class MeasureViewModel(
     private val _state = MutableStateFlow(MeasureUiState())
     val state: StateFlow<MeasureUiState> = _state.asStateFlow()
     private var job: Job? = null
+
+    /** Same value generation the mock probe already uses - reused here only to produce demo fallback values, not to read anything. */
+    private val demoValues = SimulatedSensorDataProvider()
 
     val nextRegion: MeasurementRegion? get() = MeasurementRegion.entries.getOrNull(region.ordinal + 1)
 
@@ -157,6 +165,52 @@ class MeasureViewModel(
     }
 
     private fun fail(error: ProbeError) = _state.update { it.copy(phase = MeasurePhase.FAILED, error = error) }
+
+    /**
+     * Explicit, user-chosen fallback for when the connected probe can't produce a
+     * reading (real hardware not responding). Reuses the existing simulator's own
+     * value generation - same ranges, same per-region/per-session variation - so
+     * this doesn't duplicate that logic, but always saves the result tagged
+     * [DataSource.SENSOR_SIMULATED], never SENSOR_MEASURED. Only generates values
+     * for sensors the connected device actually reports, so it can never claim a
+     * capability - e.g. temperature - the real probe doesn't have.
+     */
+    fun simulateReading() {
+        if (job?.isActive == true) return
+        job = viewModelScope.launch {
+            val session = sessions.session(sessionId) ?: run {
+                fail(ProbeError.DISCONNECTED)
+                return@launch
+            }
+            val week = assessmentId?.let { assessments.get(it)?.week } ?: 0
+            val context = SensorReadContext(sessionSeed = session.startedAt, week = week)
+            val capabilities = probe.connectedDevice?.capabilities ?: _state.value.sensors.toSet()
+            val values = demoValues.targetValues(region, context).filterKeys { it in capabilities }
+            if (values.isEmpty()) return@launch
+            val timestamp = System.currentTimeMillis()
+            val readings = values.map { (sensor, value) ->
+                SensorMeasurement(
+                    id = Ids.new("rd"),
+                    userId = session.userId,
+                    sessionId = sessionId,
+                    region = region,
+                    sensor = sensor,
+                    value = value,
+                    timestamp = timestamp,
+                    source = DataSource.SENSOR_SIMULATED,
+                )
+            }
+            sessions.saveReadings(sessionId, region, readings)
+            _state.update {
+                it.copy(
+                    phase = MeasurePhase.DONE,
+                    progress = 1f,
+                    values = readings.associate { r -> r.sensor to r.value },
+                    completed = it.completed + region,
+                )
+            }
+        }
+    }
 }
 
 private fun String.toRegion(): MeasurementRegion =
@@ -197,7 +251,10 @@ fun MeasureScreen() {
                     SkinthesiaPrimaryButton(text = next?.let { "Next: " + it.label } ?: "Finish Measurement", onClick = onNext)
                     SkinthesiaTextButton(text = "Measure again", onClick = viewModel::start)
                 }
-                MeasurePhase.FAILED -> SkinthesiaPrimaryButton(text = "Try Again", onClick = viewModel::start)
+                MeasurePhase.FAILED -> {
+                    SkinthesiaPrimaryButton(text = "Try Again", onClick = viewModel::start)
+                    SkinthesiaTextButton(text = "Simulate Reading", onClick = viewModel::simulateReading)
+                }
             }
         },
     ) {

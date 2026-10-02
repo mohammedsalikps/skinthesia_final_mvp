@@ -57,9 +57,20 @@ import com.skinthesia.hardware.probe.MockSkinProbeManager
 import com.skinthesia.hardware.probe.ProbeFailureInjector
 import com.skinthesia.hardware.probe.SimulatedSensorDataProvider
 import com.skinthesia.hardware.probe.SkinProbeManager
+import com.skinthesia.hardware.probe.SwitchableSkinProbeManager
+import com.skinthesia.hardware.probe.TcpSensorDataProvider
+import com.skinthesia.hardware.wifi.EspProbeSocket
+import com.skinthesia.hardware.wifi.WifiSocketDeviceProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+
+/**
+ * Flip to true only for on-device testing against a real Skinthesia ESP32 probe
+ * (Wi-Fi SoftAP "Detector_Device", 192.168.4.1:5000 - see hardware/wifi/WifiSocketDeviceProvider.kt).
+ * Left false so the app always ships using the safe, hardware-independent simulator.
+ */
+private const val USE_REAL_ESP32_PROBE = false
 
 /**
  * Hand-written dependency graph. Every mock (probe, vision model, analysis engine,
@@ -105,13 +116,28 @@ class AppContainer(context: Context) {
     val progressAnalyzer = ProgressAnalyzer()
     val journeyClock = JourneyClock()
 
-    // Hardware (simulated probe until the real protocol is supplied)
+    // Hardware: MockSkinProbeManager is the orchestrator either way - only which
+    // BleDeviceProvider/SensorDataProvider pair it is given changes. See
+    // USE_REAL_ESP32_PROBE above. mockProbeManager is always built: in real mode it
+    // also doubles as the existing-simulator fallback a screen can switch to (via
+    // SwitchableSkinProbeManager.useSimulated) if the real ESP32 can't be found.
     private val failureInjector = ProbeFailureInjector(appScope, settings)
-    val probeManager: SkinProbeManager = MockSkinProbeManager(
+    private val mockProbeManager: SkinProbeManager = MockSkinProbeManager(
         scope = appScope,
         ble = MockBleDeviceProvider(shouldFailConnection = { failureInjector.shouldFailConnection() }),
         sensors = SimulatedSensorDataProvider(contactLossRegion = failureInjector::contactLossRegion),
     )
+    val probeManager: SkinProbeManager = if (USE_REAL_ESP32_PROBE) {
+        val espProbeSocket = EspProbeSocket()
+        val realProbeManager = MockSkinProbeManager(
+            scope = appScope,
+            ble = WifiSocketDeviceProvider(espProbeSocket),
+            sensors = TcpSensorDataProvider(espProbeSocket),
+        )
+        SwitchableSkinProbeManager(scope = appScope, initial = realProbeManager, simulated = mockProbeManager)
+    } else {
+        mockProbeManager
+    }
 
     // Use cases
     val progress = ProgressUseCase(assessments, probeRepository, plans, progressAnalyzer)

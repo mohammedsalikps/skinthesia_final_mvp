@@ -39,8 +39,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
@@ -59,6 +57,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.skinthesia.ai.projection.projectionLift
 import com.skinthesia.ai.skinprint.PotentialEstimator
 import com.skinthesia.core.design.SkinthesiaTheme
 import com.skinthesia.core.navigation.LocalAppNavigator
@@ -80,6 +79,7 @@ import com.skinthesia.core.ui.components.SkinthesiaImage
 import com.skinthesia.core.ui.components.Tag
 import com.skinthesia.core.ui.components.TagTone
 import com.skinthesia.core.ui.icons.SkinthesiaIcons
+import com.skinthesia.core.ui.projection.toColorFilter
 import com.skinthesia.domain.model.ImageSource
 import com.skinthesia.domain.model.PotentialDimension
 import com.skinthesia.domain.model.PotentialState
@@ -391,7 +391,7 @@ private fun VisualProjectionCard(photoPath: String, horizon: Int, week: Int, onW
                 contentDescription = if (week == 0) "Your Day 1 photo" else "Illustrative projection at week $week",
                 modifier = Modifier.fillMaxSize(),
                 maxDimension = 900,
-                colorFilter = ColorFilter.colorMatrix(projectionMatrix(animatedT)),
+                colorFilter = projectionLift(animatedT).toColorFilter(),
             )
             if (week > 0) {
                 Tag(
@@ -443,15 +443,6 @@ private fun ProjectionWeekChip(week: Int, selected: Boolean, onClick: () -> Unit
             color = if (selected) colors.textOnPrimary else colors.textSecondary,
         )
     }
-}
-
-/** A subtle brighten + saturation lift as [t] (0..1) grows - a visual simulation over the SAME real photo, never a generated one. */
-private fun projectionMatrix(t: Float): ColorMatrix {
-    val matrix = ColorMatrix().apply { setToSaturation(1f + 0.16f * t) }
-    matrix.values[4] += 8f * t
-    matrix.values[9] += 6f * t
-    matrix.values[14] += 3f * t
-    return matrix
 }
 
 @Composable

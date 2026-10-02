@@ -22,6 +22,7 @@ import com.skinthesia.feature.capture.CameraScreen
 import com.skinthesia.feature.checkin.CheckInIntroScreen
 import com.skinthesia.feature.progress.AdaptivePlanScreen
 import com.skinthesia.feature.progress.ProgressComparisonScreen
+import com.skinthesia.feature.projection.SkinProjectionScreen
 import com.skinthesia.feature.capture.PhotoQualityScreen
 import com.skinthesia.feature.capture.RetakeGuidanceScreen
 import com.skinthesia.feature.capture.SelfieGuideScreen
@@ -131,6 +132,7 @@ fun SkinthesiaNavHost(
             composable<CheckInIntroRoute> { CheckInIntroScreen() }
             composable<ProgressComparisonRoute> { ProgressComparisonScreen() }
             composable<AdaptivePlanRoute> { AdaptivePlanScreen() }
+            composable<SkinProjectionRoute> { SkinProjectionScreen() }
 
             // Marketplace (checkout is simulated)
             composable<MarketplaceRoute> { MarketplaceScreen() }

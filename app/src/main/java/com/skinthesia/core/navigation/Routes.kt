@@ -49,6 +49,7 @@ enum class FlowKind { ONBOARDING, CHECK_IN, STANDALONE }
 @Serializable data object CheckInIntroRoute
 @Serializable data class ProgressComparisonRoute(val assessmentId: String? = null, val flow: String = FlowKind.STANDALONE.name)
 @Serializable data class AdaptivePlanRoute(val flow: String = FlowKind.STANDALONE.name)
+@Serializable data object SkinProjectionRoute
 
 // Main shell and its tabs
 @Serializable data object MainRoute

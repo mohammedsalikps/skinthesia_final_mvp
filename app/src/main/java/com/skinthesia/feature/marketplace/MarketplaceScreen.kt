@@ -104,6 +104,19 @@ private fun Product.matches(query: String): Boolean {
         keyIngredients.any { it.name.contains(q, ignoreCase = true) }
 }
 
+/**
+ * The five categories shown as the primary shop selector, in the exact order requested.
+ * Every other [ProductCategory] (cleansers, moisturizers, treatments) keeps its existing
+ * products and stays fully reachable through search - it just isn't a dedicated chip.
+ */
+private val PRIMARY_CATEGORIES = listOf(
+    ProductCategory.SERUM,
+    ProductCategory.SUNSCREEN,
+    ProductCategory.FACE_MASK,
+    ProductCategory.PRO,
+    ProductCategory.HAND_GLOVES,
+)
+
 /** Marketplace home: search, categories, plan matches and the full catalogue. */
 @Composable
 fun MarketplaceScreen() {
@@ -114,11 +127,16 @@ fun MarketplaceScreen() {
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val spacing = SkinthesiaTheme.spacing
-    val categories: List<ProductCategory?> = listOf<ProductCategory?>(null) + ProductCategory.entries
     var query by rememberSaveable { mutableStateOf("") }
-    var selected by rememberSaveable { mutableIntStateOf(viewModel.initialCategory?.let { categories.indexOf(it) } ?: 0) }
-    val filter = categories.getOrNull(selected)
-    val shown = state.products.filter { (filter == null || it.category == filter) && it.matches(query) }
+    var selected by rememberSaveable {
+        mutableIntStateOf(viewModel.initialCategory?.let { PRIMARY_CATEGORIES.indexOf(it) }?.takeIf { it >= 0 } ?: 0)
+    }
+    val filter = PRIMARY_CATEGORIES[selected]
+    val searching = query.isNotBlank()
+    // A chip narrows the catalogue to one category; searching looks across every
+    // category (cleansers, moisturizers and treatments included) so nothing existing
+    // becomes unreachable just because it doesn't have its own chip.
+    val shown = state.products.filter { if (searching) it.matches(query) else it.category == filter }
 
     SkinthesiaScreen(
         topBar = {
@@ -141,12 +159,12 @@ fun MarketplaceScreen() {
         SearchField(value = query, onValueChange = { query = it }, placeholder = "Search products or ingredients")
         Spacer(Modifier.height(spacing.md))
         ScrollableFilterTabs(
-            options = categories.map { it?.plural ?: "All" },
+            options = PRIMARY_CATEGORIES.map { it.plural },
             selectedIndex = selected,
             onSelect = { selected = it },
             contentPadding = PaddingValues(0.dp),
         )
-        if (query.isBlank() && filter == null && state.recommended.isNotEmpty()) {
+        if (!searching && state.recommended.isNotEmpty()) {
             Spacer(Modifier.height(spacing.lg))
             SectionHeader(title = "Matched to your plan", overline = "Recommended for you", curated = true)
             Spacer(Modifier.height(12.dp))
@@ -157,7 +175,7 @@ fun MarketplaceScreen() {
             }
         }
         Spacer(Modifier.height(spacing.lg))
-        SectionHeader(title = filter?.plural ?: "All products", overline = "${shown.size} products")
+        SectionHeader(title = if (searching) "Search results" else filter.plural, overline = "${shown.size} products")
         Spacer(Modifier.height(12.dp))
         if (shown.isEmpty()) {
             EmptyState(icon = SkinthesiaIcons.Search, title = "Nothing matches", body = "Try another word, ingredient or category.")
